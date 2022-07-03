@@ -2,11 +2,15 @@ package com.journaldev.androidcameraxopencv;
 
 import static org.opencv.core.Core.FONT_HERSHEY_SIMPLEX;
 import static org.opencv.core.Core.NORM_L2;
+import static org.opencv.core.Core.NORM_MINMAX;
+import static org.opencv.core.Core.divide;
 import static org.opencv.core.Core.magnitude;
 import static org.opencv.core.Core.mean;
 import static org.opencv.core.Core.multiply;
 import static org.opencv.core.Core.norm;
+import static org.opencv.core.Core.normalize;
 import static org.opencv.core.CvType.CV_32F;
+import static org.opencv.core.CvType.CV_8U;
 import static org.opencv.core.Mat.zeros;
 import static org.opencv.core.TermCriteria.COUNT;
 import static org.opencv.core.TermCriteria.EPS;
@@ -285,15 +289,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 //---------------------------------------------------------------------------
                         if (currentImageProcessing.equals("CHESSBOARD")) {
-                            //matColor = getChessboardCorners(bitmap);
-                            MatOfPoint2f corners = getChessboardCorners(bitmap);
+                            matColor = getChessboardCorners(bitmap);
+//                            MatOfPoint2f corners = getChessboardCorners(bitmap);
 
-                            if(corners.toList().size() >= 4) {
-                                drawMarker(matColor, new Point(corners.get(0, 0)), COLOR_RED, 1, 10, 5, 1);
-                                drawMarker(matColor, new Point(corners.get((int) chessboardSize.width - 1, 0)), COLOR_BLUE, 1, 10, 5, 1);
-                                drawMarker(matColor, new Point(corners.get((int) (chessboardSize.width * (chessboardSize.height - 1)), 0)), COLOR_GREEN, 1, 10, 5, 1);
-                                drawMarker(matColor, new Point(corners.get((int) (chessboardSize.width * chessboardSize.height) - 1, 0)), COLOR_YELLOW, 1, 10, 5, 1);
-                            }
+//                            if(corners.toList().size() >= 4) {
+//                                drawMarker(matColor, new Point(corners.get(0, 0)), COLOR_RED, 1, 10, 5, 1);
+//                                drawMarker(matColor, new Point(corners.get((int) chessboardSize.width - 1, 0)), COLOR_BLUE, 1, 10, 5, 1);
+//                                drawMarker(matColor, new Point(corners.get((int) (chessboardSize.width * (chessboardSize.height - 1)), 0)), COLOR_GREEN, 1, 10, 5, 1);
+//                                drawMarker(matColor, new Point(corners.get((int) (chessboardSize.width * chessboardSize.height) - 1, 0)), COLOR_YELLOW, 1, 10, 5, 1);
+//                            }
                         } else if (currentImageProcessing.equals("CCTAG")) {
                             matColor = detectCcTags(bitmap);
                             /*for(Point imagePoint : detectCcTags(bitmap)) {
@@ -509,7 +513,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             for (int i = 0; i < fileDir.listFiles().length; i++) {
                 photosObjectPoints.add(objectPoints);
-                photoImagePoints2f = getChessboardCorners(BitmapFactory.decodeFile(fileDir.listFiles()[i].getPath()));
+//                photoImagePoints2f = getChessboardCorners(BitmapFactory.decodeFile(fileDir.listFiles()[i].getPath()));
             /*for(int y=0; y<54; y++) {
                     Mat row = new Mat(1, 3, CV_32F);
                     row.col(0).setTo(new Scalar(photoImagePoints2f.toList().get(y).x));
@@ -581,7 +585,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return centers;
     }
 
-    private MatOfPoint2f getChessboardCorners(Bitmap bitmap) {
+    private Mat getChessboardCorners(Bitmap bitmap) {
 
         Mat matColor = new Mat();
         Mat matGrey = new Mat();
@@ -590,18 +594,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         boolean result;
         Utils.bitmapToMat(bitmap, matColor);
         cvtColor(matColor, matGrey, COLOR_BGR2GRAY);
-        resize(matGrey, matGreyDownscaled, new org.opencv.core.Size(), 0.25, 0.25, INTER_NEAREST);
-        result = findChessboardCorners(matGreyDownscaled, chessboardSize, corners);
-        multiply(corners, new Scalar(4.0, 4.0), corners);
-        if(result) {
-            cornerSubPix(matGrey, corners, new org.opencv.core.Size(11, 11),
-                    new org.opencv.core.Size(-1, -1),
-                    new TermCriteria(EPS + MAX_ITER, 30, 0.001));
-        }
+//        resize(matGrey, matGreyDownscaled, new org.opencv.core.Size(), 0.25, 0.25, INTER_NEAREST);
+//        result = findChessboardCorners(matGreyDownscaled, chessboardSize, corners);
+//        multiply(corners, new Scalar(4.0, 4.0), corners);
+//        if(result) {
+//            cornerSubPix(matGrey, corners, new org.opencv.core.Size(11, 11),
+//                    new org.opencv.core.Size(-1, -1),
+//                    new TermCriteria(EPS + MAX_ITER, 30, 0.001));
+//        }
+        Mat gaussBlurred = new Mat();
+//        GaussianBlur(matColor, gaussBlurred, new org.opencv.core.Size(5,5),0);
+        cvtColor(gaussBlurred, matGrey, COLOR_BGR2GRAY);
+        Mat maskMatrix = zeros(new org.opencv.core.Size(matGrey.width(), matGrey.height()), CV_8U);
+        Mat kernelMatrix = getStructuringElement(MORPH_ELLIPSE, new org.opencv.core.Size(11,11));
+        Mat morphedMat = new Mat(); // close
+        morphologyEx(matGrey, morphedMat, MORPH_CLOSE, kernelMatrix);
+        Mat dividedMatrix = new Mat();
+        divide(matGrey, morphedMat, dividedMatrix);
+        normalize(dividedMatrix, dividedMatrix,0,255, NORM_MINMAX);
+        Mat matColorProcessed = new Mat();
+        cvtColor(dividedMatrix, matColorProcessed, COLOR_GRAY2BGR);
 
-        //cornerHarris(matGrey, corners,2,3,0.04);
-
-        return corners;
+        return matColorProcessed;
     }
 
     private Mat detectCcTags(Bitmap bitmap) {
