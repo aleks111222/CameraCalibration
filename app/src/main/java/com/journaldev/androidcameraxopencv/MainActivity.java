@@ -589,12 +589,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         Mat matColor = new Mat();
         Mat matGrey = new Mat();
-        Mat matGreyDownscaled = new Mat();
-        MatOfPoint2f corners = new MatOfPoint2f();
-        boolean result;
+//        Mat matGreyDownscaled = new Mat();
+//        MatOfPoint2f corners = new MatOfPoint2f();
+//        boolean result;
         Utils.bitmapToMat(bitmap, matColor);
         cvtColor(matColor, matGrey, COLOR_BGR2GRAY);
-//        resize(matGrey, matGreyDownscaled, new org.opencv.core.Size(), 0.25, 0.25, INTER_NEAREST);
+//        resize(matGrey, matGrey, new org.opencv.core.Size(), 0.25, 0.25, INTER_NEAREST);
 //        result = findChessboardCorners(matGreyDownscaled, chessboardSize, corners);
 //        multiply(corners, new Scalar(4.0, 4.0), corners);
 //        if(result) {
@@ -602,9 +602,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                    new org.opencv.core.Size(-1, -1),
 //                    new TermCriteria(EPS + MAX_ITER, 30, 0.001));
 //        }
-        Mat gaussBlurred = new Mat();
+//        Mat gaussBlurred = new Mat();
 //        GaussianBlur(matColor, gaussBlurred, new org.opencv.core.Size(5,5),0);
-        cvtColor(gaussBlurred, matGrey, COLOR_BGR2GRAY);
         Mat maskMatrix = zeros(new org.opencv.core.Size(matGrey.width(), matGrey.height()), CV_8U);
         Mat kernelMatrix = getStructuringElement(MORPH_ELLIPSE, new org.opencv.core.Size(11,11));
         Mat morphedMat = new Mat(); // close
@@ -615,7 +614,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Mat matColorProcessed = new Mat();
         cvtColor(dividedMatrix, matColorProcessed, COLOR_GRAY2BGR);
 
-        return matColorProcessed;
+        adaptiveThreshold(dividedMatrix, dividedMatrix,255,0,1,19,2);
+
+        return dividedMatrix;
     }
 
     private Mat detectCcTags(Bitmap bitmap) {
