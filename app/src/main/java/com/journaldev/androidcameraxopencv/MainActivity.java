@@ -73,6 +73,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.calib3d.Calib3d;
+import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDouble;
@@ -604,19 +605,51 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        }
 //        Mat gaussBlurred = new Mat();
 //        GaussianBlur(matColor, gaussBlurred, new org.opencv.core.Size(5,5),0);
+//        Mat maskMatrix = zeros(new org.opencv.core.Size(matGrey.width(), matGrey.height()), CV_8U);
+//        Mat kernelMatrix = getStructuringElement(MORPH_ELLIPSE, new org.opencv.core.Size(11,11));
+//        Mat morphedMat = new Mat(); // close
+//        morphologyEx(matGrey, morphedMat, MORPH_CLOSE, kernelMatrix);
+//        Mat dividedMatrix = new Mat();
+//        divide(matGrey, morphedMat, dividedMatrix);
+//        normalize(dividedMatrix, dividedMatrix,0,255, NORM_MINMAX);
+//        Mat matColorProcessed = new Mat();
+//        cvtColor(dividedMatrix, matColorProcessed, COLOR_GRAY2BGR);
+//
+//        adaptiveThreshold(dividedMatrix, dividedMatrix,255,0,1,19,2);
+
+        MatOfPoint corners = new MatOfPoint();
+        threshold(matGrey, matGrey,127,255, THRESH_BINARY);
+        goodFeaturesToTrack(matGrey, corners, (int) (chessboardSize.width * chessboardSize.height), 0.5, 50);
+        List<MatOfPoint> contours = new ArrayList<>();
+        Mat hierarchy = new Mat();
+        findContours(matGrey, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE);
+
+        double maxArea = 0.0;
+        MatOfPoint bestContour = new MatOfPoint();
+        for(MatOfPoint contour : contours) {
+            double area = contourArea(contour);
+            if (area > 1000.0) {
+                if (area > maxArea) {
+                    maxArea = area;
+                    bestContour = contour;
+                }
+            }
+        }
+
+        List<MatOfPoint> bestContourList = new ArrayList<>();
+        bestContourList.add(bestContour);
+
         Mat maskMatrix = zeros(new org.opencv.core.Size(matGrey.width(), matGrey.height()), CV_8U);
-        Mat kernelMatrix = getStructuringElement(MORPH_ELLIPSE, new org.opencv.core.Size(11,11));
-        Mat morphedMat = new Mat(); // close
-        morphologyEx(matGrey, morphedMat, MORPH_CLOSE, kernelMatrix);
-        Mat dividedMatrix = new Mat();
-        divide(matGrey, morphedMat, dividedMatrix);
-        normalize(dividedMatrix, dividedMatrix,0,255, NORM_MINMAX);
-        Mat matColorProcessed = new Mat();
-        cvtColor(dividedMatrix, matColorProcessed, COLOR_GRAY2BGR);
 
-        adaptiveThreshold(dividedMatrix, dividedMatrix,255,0,1,19,2);
+        drawContours(maskMatrix, bestContourList, 0, new Scalar(255.0, 255.0, 255.0, 255.0), -1);
+        drawContours(maskMatrix, bestContourList, 0, new Scalar(0.0, 0.0, 0.0, 0.0), 2);
 
-        return dividedMatrix;
+        Core.bitwise_and(matGrey, maskMatrix, matGrey);
+
+        for(Point corner : corners.toList()) {
+            drawMarker(matColor, corner, COLOR_RED, 1, 10, 5, 1);
+        }
+        return matGrey;
     }
 
     private Mat detectCcTags(Bitmap bitmap) {
