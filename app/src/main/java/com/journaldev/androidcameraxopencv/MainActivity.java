@@ -82,6 +82,7 @@ import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.MatOfPoint3f;
 import org.opencv.core.Point;
 import org.opencv.core.Point3;
+import org.opencv.core.Rect;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
 import org.opencv.core.TermCriteria;
@@ -619,7 +620,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         MatOfPoint corners = new MatOfPoint();
         threshold(matGrey, matGrey,127,255, THRESH_BINARY);
-        goodFeaturesToTrack(matGrey, corners, (int) (chessboardSize.width * chessboardSize.height), 0.5, 50);
         List<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
         findContours(matGrey, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE);
@@ -646,10 +646,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         Core.bitwise_and(matGrey, maskMatrix, matGrey);
 
+        goodFeaturesToTrack(matGrey, corners, 100, 0.5, 50);
+
+        MatOfPoint2f bestContour2f = new MatOfPoint2f(bestContour.toArray());
+
         for(Point corner : corners.toList()) {
-            drawMarker(matColor, corner, COLOR_RED, 1, 10, 5, 1);
+            if(pointPolygonTest(bestContour2f, corner, true) > 5.0) {
+                drawMarker(matColor, corner, COLOR_RED, 1, 10, 5, 1);
+            }
         }
-        return matGrey;
+        return matColor;
     }
 
     private Mat detectCcTags(Bitmap bitmap) {
