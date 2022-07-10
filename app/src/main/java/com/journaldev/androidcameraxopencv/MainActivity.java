@@ -646,13 +646,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         Core.bitwise_and(matGrey, maskMatrix, matGrey);
 
-        goodFeaturesToTrack(matGrey, corners, 100, 0.5, 50);
+        Mat emptyMat = new Mat();
 
-        MatOfPoint2f bestContour2f = new MatOfPoint2f(bestContour.toArray());
+        goodFeaturesToTrack(matGrey, corners, 100, 0.5, 50, emptyMat, 3, true, 0.04);
+
+        RotatedRect rect = minAreaRect(new MatOfPoint2f(bestContour.toArray()));
+        Mat maskCornersMat = new Mat();
+        List<Point> maskCorners = new ArrayList<>();
+        boxPoints(rect, maskCornersMat);
+        maskCorners.add(new Point(maskCornersMat.get(0, 0)));
+        maskCorners.add(new Point(maskCornersMat.get(0, 1)));
+        maskCorners.add(new Point(maskCornersMat.get(1, 0)));
+        maskCorners.add(new Point(maskCornersMat.get(1, 1)));
+
+        drawContours(matColor, bestContourList, 0, COLOR_GREEN, -1);
 
         for(Point corner : corners.toList()) {
-            if(pointPolygonTest(bestContour2f, corner, true) > 5.0) {
-                drawMarker(matColor, corner, COLOR_RED, 1, 10, 5, 1);
+            boolean isOnCorner = false;
+            for(Point maskCorner : maskCorners) {
+                drawMarker(matColor, maskCorner, COLOR_BLUE, 1, 15, 5, 1);
+                if(sqrt(pow(corner.x - maskCorner.x, 2) + pow(corner.y - maskCorner.y, 2)) <= 5) {
+                    isOnCorner = true;
+                }
+            }
+            if(!isOnCorner) {
+                drawMarker(matColor, corner, COLOR_RED, 1, 10, 4, 1);
             }
         }
         return matColor;
