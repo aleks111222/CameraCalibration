@@ -654,17 +654,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Mat maskCornersMat = new Mat();
         List<Point> maskCorners = new ArrayList<>();
         boxPoints(rect, maskCornersMat);
-        maskCorners.add(new Point(maskCornersMat.get(0, 0)));
-        maskCorners.add(new Point(maskCornersMat.get(0, 1)));
-        maskCorners.add(new Point(maskCornersMat.get(1, 0)));
-        maskCorners.add(new Point(maskCornersMat.get(1, 1)));
+
+        maskCorners.add(new Point(maskCornersMat.get(0, 0)[0], maskCornersMat.get(0, 1)[0]));
+        maskCorners.add(new Point(maskCornersMat.get(1, 0)[0], maskCornersMat.get(1, 1)[0]));
+        maskCorners.add(new Point(maskCornersMat.get(2, 0)[0], maskCornersMat.get(2, 1)[0]));
+        maskCorners.add(new Point(maskCornersMat.get(3, 0)[0], maskCornersMat.get(3, 1)[0]));
 
         drawContours(matColor, bestContourList, 0, COLOR_GREEN, -1);
 
         for(Point corner : corners.toList()) {
             boolean isOnCorner = false;
             for(Point maskCorner : maskCorners) {
-                drawMarker(matColor, maskCorner, COLOR_BLUE, 1, 15, 5, 1);
+                drawMarker(matColor, maskCorner, COLOR_BLUE, 1, 5, 5, 1);
                 if(sqrt(pow(corner.x - maskCorner.x, 2) + pow(corner.y - maskCorner.y, 2)) <= 5) {
                     isOnCorner = true;
                 }
