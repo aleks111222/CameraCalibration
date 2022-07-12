@@ -27,6 +27,7 @@ import static org.opencv.imgproc.Imgproc.ellipse;
 import static org.opencv.imgproc.Imgproc.findContours;
 import static org.opencv.imgproc.Imgproc.fitEllipse;
 
+import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.cos;
 import static java.lang.Math.max;
@@ -651,44 +652,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         Mat emptyMat = new Mat();
 
-        goodFeaturesToTrack(matGrey, corners, 100, 0.5, 50, emptyMat, 3, true, 0.04);
+        Canny(matGrey, matGrey, 100, 200);
 
-        List<Point> maskCorners = new ArrayList<>();
+        Mat linesMat = new Mat();
 
-        double lowestX = 99999.0;
-        double highestX = -99999.0;
-        double lowestY = 99999.0;
-        double highestY = -99999.0;
+        HoughLinesP(matGrey, linesMat, 1, PI / 180, 150, 50,10);
 
-        for(Point contourPoint : bestContour.toArray()) {
-            if(contourPoint.x < lowestX)
-                lowestX = contourPoint.x;
-            if(contourPoint.y < lowestY)
-                lowestY = contourPoint.y;
-            if(contourPoint.x > highestX)
-                highestX = contourPoint.x;
-            if(contourPoint.y > highestY)
-                highestY = contourPoint.y;
-        }
+        Log.d("Debug:", String.valueOf(linesMat);
 
-        drawMarker(matColor, new Point(lowestX, lowestY), COLOR_BLUE, 1, 5, 5, 1);
-        drawMarker(matColor, new Point(lowestX, highestY), COLOR_BLUE, 1, 5, 5, 1);
-        drawMarker(matColor, new Point(highestX, lowestY), COLOR_BLUE, 1, 5, 5, 1);
-        drawMarker(matColor, new Point(highestX, highestY), COLOR_BLUE, 1, 5, 5, 1);
-
+//        goodFeaturesToTrack(matGrey, corners, 100, 0.5, 50, emptyMat, 3, true, 0.04);
+//
 //        for(Point corner : corners.toList()) {
-//            boolean isOnCorner = false;
-//            for(Point maskCorner : maskCorners) {
-//                drawMarker(matColor, maskCorner, COLOR_BLUE, 1, 5, 5, 1);
-//                if(sqrt(pow(corner.x - maskCorner.x, 2) + pow(corner.y - maskCorner.y, 2)) <= 5) {
-//                    isOnCorner = true;
-//                }
-//            }
-//            if(!isOnCorner) {
-//                drawMarker(matColor, corner, COLOR_RED, 1, 10, 4, 1);
-//            }
+//            drawMarker(matColor, corner, COLOR_RED, 1, 10, 4, 1);
 //        }
-        return matColor;
+        return matGrey;
     }
 
     private Mat detectCcTags(Bitmap bitmap) {
