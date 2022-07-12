@@ -656,16 +656,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         Mat linesMat = new Mat();
 
-        HoughLinesP(matGrey, linesMat, 1, PI / 180, 150, 50,10);
+        HoughLinesP(matGrey, linesMat, 1, PI / 180, 50, 10,10);
 
-        Log.d("Debug:", String.valueOf(linesMat);
+        for(int i = 0; i < linesMat.rows(); i++) {
+            line(
+                    matColor,
+                    new Point(linesMat.get(i,0)[0], linesMat.get(i,0)[1]),
+                    new Point(linesMat.get(i,0)[2], linesMat.get(i,0)[3]),
+                    COLOR_RED, 3, LINE_AA, 0);
+        }
 
 //        goodFeaturesToTrack(matGrey, corners, 100, 0.5, 50, emptyMat, 3, true, 0.04);
 //
 //        for(Point corner : corners.toList()) {
 //            drawMarker(matColor, corner, COLOR_RED, 1, 10, 4, 1);
 //        }
-        return matGrey;
+        return matColor;
     }
 
     private Mat detectCcTags(Bitmap bitmap) {
