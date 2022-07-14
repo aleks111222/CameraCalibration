@@ -120,7 +120,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     int NUMBER_OF_CCTAG_IMAGE_POINTS = 0;
     int TAKE_PHOTO = 0;
     //org.opencv.core.Size MAX_CHESSBOARD_SIZE = new org.opencv.core.Size(9,6);
-    org.opencv.core.Size chessboardSize = new org.opencv.core.Size(9,6);
+    org.opencv.core.Size chessboardSize = new org.opencv.core.Size(5,4);
     org.opencv.core.Size circleGridSize = new org.opencv.core.Size(4,11);
 
     String currentImageProcessing = "CHESSBOARD";
@@ -660,21 +660,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        erode(matGrey, matGrey, kernel);
 
         MatOfPoint corners = new MatOfPoint();
-        List<Point> cornersReduced = new ArrayList<>();
+//        List<Point> cornersReduced = new ArrayList<>();
 
         Mat emptyMat = new Mat();
         goodFeaturesToTrack(matGrey, corners, 100, 0.3, 50, emptyMat, 3, true, 0.04);
 
-        for(int index = 0; index < corners.toList().size() - 1; index++) {
-            if(!(sqrt(pow(corners.toArray()[index].x - corners.toArray()[index + 1].x, 2) + pow(corners.toArray()[index].y - corners.toArray()[index + 1].y, 2)) < 15)) {
-                cornersReduced.add(corners.toArray()[index]);
-            }
+//        for(int index = 0; index < corners.toList().size() - 1; index++) {
+//            if(!(sqrt(pow(corners.toArray()[index].x - corners.toArray()[index + 1].x, 2) + pow(corners.toArray()[index].y - corners.toArray()[index + 1].y, 2)) < 15)) {
+//                cornersReduced.add(corners.toArray()[index]);
+//            }
+//        }
+
+        for(Point corner : corners.toList()) {
+            drawMarker(matColor, corner, COLOR_RED, 1, 5, 4, 1);
+            putText(matColor, String.valueOf(corners.toList().indexOf(corner)), corner, FONT_HERSHEY_SIMPLEX, 4, COLOR_GREEN);
         }
 
-        for(Point corner : cornersReduced) {
-            drawMarker(matColor, corner, COLOR_RED, 1, 5, 4, 1);
-            putText(matColor, String.valueOf(cornersReduced.indexOf(corner)), corner, FONT_HERSHEY_SIMPLEX, 4, COLOR_GREEN);
-        }
+        Log.d("Debug:", String.valueOf(corners.size()));
+
+
 
         return matColor;
     }
