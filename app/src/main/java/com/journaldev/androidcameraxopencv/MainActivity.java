@@ -12,6 +12,7 @@ import static org.opencv.core.Core.norm;
 import static org.opencv.core.Core.normalize;
 import static org.opencv.core.CvType.CV_32F;
 import static org.opencv.core.CvType.CV_8U;
+import static org.opencv.core.Mat.ones;
 import static org.opencv.core.Mat.zeros;
 import static org.opencv.core.TermCriteria.COUNT;
 import static org.opencv.core.TermCriteria.EPS;
@@ -621,12 +622,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        cvtColor(dividedMatrix, matColorProcessed, COLOR_GRAY2BGR);
 //
 //        adaptiveThreshold(dividedMatrix, dividedMatrix,255,0,1,19,2);
-
-        MatOfPoint corners = new MatOfPoint();
+        normalize(matGrey, matGrey, 0, 255, NORM_MINMAX);
         threshold(matGrey, matGrey,127,255, THRESH_BINARY);
         List<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
-        findContours(matGrey, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE);
+        findContours(matGrey, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
 
         double maxArea = 0.0;
         MatOfPoint bestContour = new MatOfPoint();
@@ -650,27 +650,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         Core.bitwise_and(matGrey, maskMatrix, matGrey);
 
+        maskMatrix = zeros(new org.opencv.core.Size(matGrey.width() + 2, matGrey.height() + 2), CV_8U);
+        floodFill(matGrey, maskMatrix, new Point(0,0), new Scalar(255, 255));
+
+//        Canny(matGrey, matGrey, 90, 150, 3, true); // co to ten l2gradient?
+//        Mat kernel = ones(3,3, CV_8U);
+//        dilate(matGrey, matGrey, kernel);
+//        kernel = ones(5,5, CV_8U);
+//        erode(matGrey, matGrey, kernel);
+
+        MatOfPoint corners = new MatOfPoint();
+        List<Point> cornersReduced = new ArrayList<>();
+
         Mat emptyMat = new Mat();
+        goodFeaturesToTrack(matGrey, corners, 100, 0.3, 50, emptyMat, 3, true, 0.04);
 
-        Canny(matGrey, matGrey, 100, 200);
-
-        Mat linesMat = new Mat();
-
-        HoughLinesP(matGrey, linesMat, 1, PI / 180, 50, 10,10);
-
-        for(int i = 0; i < linesMat.rows(); i++) {
-            line(
-                    matColor,
-                    new Point(linesMat.get(i,0)[0], linesMat.get(i,0)[1]),
-                    new Point(linesMat.get(i,0)[2], linesMat.get(i,0)[3]),
-                    COLOR_RED, 3, LINE_AA, 0);
+        for(int index = 0; index < corners.toList().size() - 1; index++) {
+            if(!(sqrt(pow(corners.toArray()[index].x - corners.toArray()[index + 1].x, 2) + pow(corners.toArray()[index].y - corners.toArray()[index + 1].y, 2)) < 15)) {
+                cornersReduced.add(corners.toArray()[index]);
+            }
         }
 
-//        goodFeaturesToTrack(matGrey, corners, 100, 0.5, 50, emptyMat, 3, true, 0.04);
-//
-//        for(Point corner : corners.toList()) {
-//            drawMarker(matColor, corner, COLOR_RED, 1, 10, 4, 1);
-//        }
+        for(Point corner : cornersReduced) {
+            drawMarker(matColor, corner, COLOR_RED, 1, 5, 4, 1);
+            putText(matColor, String.valueOf(cornersReduced.indexOf(corner)), corner, FONT_HERSHEY_SIMPLEX, 4, COLOR_GREEN);
+        }
+
         return matColor;
     }
 
