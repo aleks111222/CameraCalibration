@@ -100,6 +100,7 @@ import java.sql.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Vector;
 
@@ -663,7 +664,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        List<Point> cornersReduced = new ArrayList<>();
 
         Mat emptyMat = new Mat();
-        goodFeaturesToTrack(matGrey, corners, 100, 0.3, 50, emptyMat, 3, true, 0.04);
+        goodFeaturesToTrack(matGrey, corners, 86, 0.4, 50, emptyMat, 3, true, 0.04);
 
 //        for(int index = 0; index < corners.toList().size() - 1; index++) {
 //            if(!(sqrt(pow(corners.toArray()[index].x - corners.toArray()[index + 1].x, 2) + pow(corners.toArray()[index].y - corners.toArray()[index + 1].y, 2)) < 15)) {
@@ -671,14 +672,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //            }
 //        }
 
-        for(Point corner : corners.toList()) {
-            drawMarker(matColor, corner, COLOR_RED, 1, 5, 4, 1);
-            putText(matColor, String.valueOf(corners.toList().indexOf(corner)), corner, FONT_HERSHEY_SIMPLEX, 4, COLOR_GREEN);
+        List<Point> orderedPoints = corners.toList();
+
+        Collections.sort(orderedPoints, new Comparator<Point>() {
+            public int compare(Point x1, Point x2) {
+                return Double.compare(100 * x1.y + 10 * x1.x, 100 * x2.y + 10 * x2.x);
+            }
+        });
+
+        for(Point corner : orderedPoints) {
+            drawMarker(matColor, corner, COLOR_RED, 1, 2, 2, 1);
+            putText(matColor, String.valueOf(orderedPoints.indexOf(corner)), corner, FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
         }
-
-        Log.d("Debug:", String.valueOf(corners.size()));
-
-
 
         return matColor;
     }
