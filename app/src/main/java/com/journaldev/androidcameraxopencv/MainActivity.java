@@ -623,8 +623,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        cvtColor(dividedMatrix, matColorProcessed, COLOR_GRAY2BGR);
 //
 //        adaptiveThreshold(dividedMatrix, dividedMatrix,255,0,1,19,2);
-        normalize(matGrey, matGrey, 0, 255, NORM_MINMAX);
         threshold(matGrey, matGrey,127,255, THRESH_BINARY);
+        normalize(matGrey, matGrey, 0, 255, NORM_MINMAX);
         List<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
         findContours(matGrey, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
