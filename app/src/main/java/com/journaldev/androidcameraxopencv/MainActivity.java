@@ -96,7 +96,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.sql.Array;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -121,7 +121,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     int NUMBER_OF_CCTAG_IMAGE_POINTS = 0;
     int TAKE_PHOTO = 0;
     //org.opencv.core.Size MAX_CHESSBOARD_SIZE = new org.opencv.core.Size(9,6);
-    org.opencv.core.Size chessboardSize = new org.opencv.core.Size(5,4);
+    org.opencv.core.Size chessboardSize = new org.opencv.core.Size(10,8);
     org.opencv.core.Size circleGridSize = new org.opencv.core.Size(4,11);
 
     String currentImageProcessing = "CHESSBOARD";
@@ -664,13 +664,43 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        List<Point> cornersReduced = new ArrayList<>();
 
         Mat emptyMat = new Mat();
-        goodFeaturesToTrack(matGrey, corners, 86, 0.4, 50, emptyMat, 3, true, 0.04);
+        goodFeaturesToTrack(matGrey, corners, (int) (chessboardSize.width * chessboardSize.height), 0.3, 50, emptyMat, 3, true, 0.04);
 
 //        for(int index = 0; index < corners.toList().size() - 1; index++) {
 //            if(!(sqrt(pow(corners.toArray()[index].x - corners.toArray()[index + 1].x, 2) + pow(corners.toArray()[index].y - corners.toArray()[index + 1].y, 2)) < 15)) {
 //                cornersReduced.add(corners.toArray()[index]);
 //            }
 //        }
+
+        Point lowestXlowestY = new Point(9999,9999);
+        Point highestXhighestY = new Point(-9999,-9999);
+        Point highestXlowestY = new Point(-9999,9999);
+        Point lowestXhighestY = new Point(9999,-9999);
+
+        for(Point cornerPoint : corners.toArray()) {
+            if(cornerPoint.x < lowestXlowestY.x && cornerPoint.y < lowestXlowestY.y) {
+                lowestXlowestY = cornerPoint;
+            }
+//            if(cornerPoint.x > highestXhighestY.x && cornerPoint.y > highestXhighestY.y) {
+//                highestXhighestY = cornerPoint;
+//            }
+//            if(cornerPoint.x > highestXlowestY.x && cornerPoint.y < highestXlowestY.y) {
+//                highestXlowestY = cornerPoint;
+//            }
+//            if(cornerPoint.x < lowestXhighestY.x && cornerPoint.y > lowestXhighestY.y) {
+//                lowestXhighestY = cornerPoint;
+//            }
+        }
+
+        drawMarker(matColor, lowestXhighestY, COLOR_BLUE, 2, 8, 5, 1);
+//        drawMarker(matColor, highestXhighestY, COLOR_BLUE, 2, 8, 5, 1);
+//        drawMarker(matColor, highestXlowestY, COLOR_BLUE, 2, 8, 5, 1);
+//        drawMarker(matColor, lowestXlowestY, COLOR_BLUE, 2, 8, 5, 1);
+
+        putText(matColor, "" + lowestXhighestY.x + " " + lowestXhighestY.y, lowestXlowestY, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+//        putText(matColor, "" + lowestXlowestY.x + " " + lowestXlowestY.y, lowestXhighestY, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+//        putText(matColor, "lowestY" + lowestY.y, lowestY, FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
+//        putText(matColor, "highestY" + highestY.y, highestY, FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
 
         List<Point> orderedPoints = corners.toList();
 
@@ -680,11 +710,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
 
+//        Point[][] cornersArray = new Point[(int) chessboardSize.height][(int) chessboardSize.width];
 
+//        for(int i = 0, j = 0; i * j < chessboardSize.height * chessboardSize.width - 1;) {
+//            cornersArray[i][j] = orderedPoints.get(i * j);
+//            if(j == chessboardSize.width - 1) {
+//                j = 0;
+//                i++;
+//            }
+//        }
 
         for(Point corner : orderedPoints) {
             drawMarker(matColor, corner, COLOR_RED, 1, 2, 2, 1);
-            putText(matColor, String.valueOf(orderedPoints.indexOf(corner)), corner, FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
+//            putText(matColor, String.valueOf(orderedPoints.indexOf(corner)), corner, FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
         }
 
         return matColor;
@@ -915,8 +953,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 return;
         }
 
-        mx.postRotate((float) rotationDgr, cX, cY);
-        //textureView.setTransform(mx);
+//        mx.postRotate((float) rotationDgr, cX, cY);
+//        textureView.setTransform(mx);
     }
 
     @Override
