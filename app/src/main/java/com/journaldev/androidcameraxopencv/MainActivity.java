@@ -672,15 +672,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //            }
 //        }
 
-        Point lowestXlowestY = new Point(9999,9999);
-        Point highestXhighestY = new Point(-9999,-9999);
-        Point highestXlowestY = new Point(-9999,9999);
-        Point lowestXhighestY = new Point(9999,-9999);
-
-        for(Point cornerPoint : corners.toArray()) {
-            if(cornerPoint.x < lowestXlowestY.x && cornerPoint.y < lowestXlowestY.y) {
-                lowestXlowestY = cornerPoint;
-            }
+//        Point lowestXlowestY = new Point(9999,9999);
+//        Point highestXhighestY = new Point(-9999,-9999);
+//        Point highestXlowestY = new Point(-9999,9999);
+//        Point lowestXhighestY = new Point(9999,-9999);
+//
+//        for(Point cornerPoint : corners.toArray()) {
+//            if(cornerPoint.x < lowestXlowestY.x && cornerPoint.y < lowestXlowestY.y) {
+//                lowestXlowestY = cornerPoint;
+//            }
 //            if(cornerPoint.x > highestXhighestY.x && cornerPoint.y > highestXhighestY.y) {
 //                highestXhighestY = cornerPoint;
 //            }
@@ -690,23 +690,40 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //            if(cornerPoint.x < lowestXhighestY.x && cornerPoint.y > lowestXhighestY.y) {
 //                lowestXhighestY = cornerPoint;
 //            }
-        }
-
-        drawMarker(matColor, lowestXhighestY, COLOR_BLUE, 2, 8, 5, 1);
+//        }
+//
+//        drawMarker(matColor, lowestXlowestY, COLOR_BLUE, 2, 8, 5, 1);
 //        drawMarker(matColor, highestXhighestY, COLOR_BLUE, 2, 8, 5, 1);
 //        drawMarker(matColor, highestXlowestY, COLOR_BLUE, 2, 8, 5, 1);
 //        drawMarker(matColor, lowestXlowestY, COLOR_BLUE, 2, 8, 5, 1);
-
-        putText(matColor, "" + lowestXhighestY.x + " " + lowestXhighestY.y, lowestXlowestY, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+//
+//        putText(matColor, "" + lowestXlowestY.x + " " + lowestXlowestY.y, lowestXlowestY, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
 //        putText(matColor, "" + lowestXlowestY.x + " " + lowestXlowestY.y, lowestXhighestY, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
 //        putText(matColor, "lowestY" + lowestY.y, lowestY, FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
 //        putText(matColor, "highestY" + highestY.y, highestY, FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
 
+        MatOfPoint2f bestContour2f = new MatOfPoint2f(bestContour.toArray());
+        RotatedRect rotatedRectangle = minAreaRect(bestContour2f);
+
         List<Point> orderedPoints = corners.toList();
+
+        double angle = rotatedRectangle.angle;
+
+        if (rotatedRectangle.size.width < rotatedRectangle.size.height) {
+            angle = angle + 90;
+        }
+
+        putText(matColor, String.valueOf(angle), new Point(200,200), FONT_HERSHEY_SIMPLEX, 2, COLOR_RED);
+
+        double finalAngle = angle;
 
         Collections.sort(orderedPoints, new Comparator<Point>() {
             public int compare(Point x1, Point x2) {
-                return Double.compare(100 * x1.y + 10 * x1.x, 100 * x2.y + 10 * x2.x);
+                double x1Prime = x1.x * cos(Math.toRadians(finalAngle)) - x1.y * sin(Math.toRadians(finalAngle));
+                double y1Prime = x1.x * sin(Math.toRadians(finalAngle)) + x1.y * cos(Math.toRadians(finalAngle));
+                double x2Prime = x2.x * cos(Math.toRadians(finalAngle)) - x2.y * sin(Math.toRadians(finalAngle));
+                double y2Prime = x2.x * sin(Math.toRadians(finalAngle)) + x2.y * cos(Math.toRadians(finalAngle));
+                return Double.compare(100 * y1Prime + 10 * x1Prime, 100 * y2Prime + 10 * x2Prime);
             }
         });
 
@@ -722,7 +739,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         for(Point corner : orderedPoints) {
             drawMarker(matColor, corner, COLOR_RED, 1, 2, 2, 1);
-//            putText(matColor, String.valueOf(orderedPoints.indexOf(corner)), corner, FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
+            putText(matColor, String.valueOf(orderedPoints.indexOf(corner)), corner, FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
         }
 
         return matColor;
