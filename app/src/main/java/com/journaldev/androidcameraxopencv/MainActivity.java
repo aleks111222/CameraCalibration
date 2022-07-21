@@ -652,7 +652,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Core.bitwise_and(matGrey, maskMatrix, matGrey);
 
         maskMatrix = zeros(new org.opencv.core.Size(matGrey.width() + 2, matGrey.height() + 2), CV_8U);
-        floodFill(matGrey, maskMatrix, new Point(0,0), new Scalar(255, 255));
+//        floodFill(matGrey, maskMatrix, new Point(0,0), new Scalar(255, 255));
 
 //        Canny(matGrey, matGrey, 90, 150, 3, true); // co to ten l2gradient?
 //        Mat kernel = ones(3,3, CV_8U);
@@ -709,11 +709,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         double angle = rotatedRectangle.angle;
 
-//        if (rotatedRectangle.size.width < rotatedRectangle.size.height) {
-//            angle = angle + 90;
-//        }
+        if (rotatedRectangle.size.width < rotatedRectangle.size.height) {
+            angle += 90;
+        }
 
-        putText(matColor, String.valueOf(angle), new Point(200,200), FONT_HERSHEY_SIMPLEX, 2, COLOR_RED);
+        putText(matColor, "angle = " + angle, new Point(200,200), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
 
         Mat chessboardRotationMatrix = getRotationMatrix2D(rotatedRectangle.center, angle, 1);
 
@@ -739,7 +739,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         for(Point corner : orderedPoints) {
             drawMarker(matColor, corner, COLOR_RED, 1, 2, 2, 1);
-            putText(matColor, String.valueOf(orderedPoints.indexOf(corner)), corner, FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
+            putText(matColor, String.valueOf(orderedPoints.indexOf(corner)), corner, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
         }
 
         return matColor;
