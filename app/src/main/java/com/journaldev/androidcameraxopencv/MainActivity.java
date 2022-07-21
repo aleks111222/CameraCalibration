@@ -709,20 +709,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         double angle = rotatedRectangle.angle;
 
-        if (rotatedRectangle.size.width < rotatedRectangle.size.height) {
-            angle = angle + 90;
-        }
+//        if (rotatedRectangle.size.width < rotatedRectangle.size.height) {
+//            angle = angle + 90;
+//        }
 
         putText(matColor, String.valueOf(angle), new Point(200,200), FONT_HERSHEY_SIMPLEX, 2, COLOR_RED);
 
-        double finalAngle = angle;
+        Mat chessboardRotationMatrix = getRotationMatrix2D(rotatedRectangle.center, angle, 1);
 
         Collections.sort(orderedPoints, new Comparator<Point>() {
             public int compare(Point x1, Point x2) {
-                double x1Prime = x1.x * cos(Math.toRadians(finalAngle)) - x1.y * sin(Math.toRadians(finalAngle));
-                double y1Prime = x1.x * sin(Math.toRadians(finalAngle)) + x1.y * cos(Math.toRadians(finalAngle));
-                double x2Prime = x2.x * cos(Math.toRadians(finalAngle)) - x2.y * sin(Math.toRadians(finalAngle));
-                double y2Prime = x2.x * sin(Math.toRadians(finalAngle)) + x2.y * cos(Math.toRadians(finalAngle));
+                double x1Prime = chessboardRotationMatrix.get(0,0)[0] * x1.x + chessboardRotationMatrix.get(0,1)[0] * x1.y + chessboardRotationMatrix.get(0,2)[0];
+                double y1Prime = chessboardRotationMatrix.get(1,0)[0] * x1.x + chessboardRotationMatrix.get(1,1)[0] * x1.y + chessboardRotationMatrix.get(1,2)[0];
+                double x2Prime = chessboardRotationMatrix.get(0,0)[0] * x2.x + chessboardRotationMatrix.get(0,1)[0] * x2.y + chessboardRotationMatrix.get(0,2)[0];
+                double y2Prime = chessboardRotationMatrix.get(1,0)[0] * x2.x + chessboardRotationMatrix.get(1,1)[0] * x2.y + chessboardRotationMatrix.get(1,2)[0];
                 return Double.compare(100 * y1Prime + 10 * x1Prime, 100 * y2Prime + 10 * x2Prime);
             }
         });
