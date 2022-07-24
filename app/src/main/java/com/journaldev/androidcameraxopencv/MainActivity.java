@@ -11,6 +11,8 @@ import static org.opencv.core.Core.multiply;
 import static org.opencv.core.Core.norm;
 import static org.opencv.core.Core.normalize;
 import static org.opencv.core.CvType.CV_32F;
+import static org.opencv.core.CvType.CV_64F;
+import static org.opencv.core.CvType.CV_64FC2;
 import static org.opencv.core.CvType.CV_8U;
 import static org.opencv.core.Mat.ones;
 import static org.opencv.core.Mat.zeros;
@@ -727,7 +729,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
 
-        Mat cornerMatrix = zeros(chessboardSize, CV_32F);
+        Mat cornerMatrix = new Mat(chessboardSize, CV_64FC2);
         if(orderedPoints.size() <= chessboardSize.width * chessboardSize.height) {
             int currentRow = 0;
             int currentColumn = 0;
@@ -737,20 +739,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if(abs(yPrime - currentY) > 20) {
                     currentRow++;
                     currentColumn = 0;
-                } else {
-                    cornerMatrix.put(currentRow, currentColumn, corner.x, corner.y);
-                    currentColumn++;
                 }
+                cornerMatrix.put(currentRow, currentColumn, corner.x, corner.y);
+                currentColumn++;
                 currentY = yPrime;
             }
         }
 
-        Log.d("Debug:", "" + cornerMatrix.size());
+//        for(Point corner : orderedPoints) {
+//            drawMarker(matColor, corner, COLOR_RED, 1, 2, 2, 1);
+//            putText(matColor, String.valueOf(orderedPoints.indexOf(corner)), corner, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+//        }
 
-        for(Point corner : orderedPoints) {
-            drawMarker(matColor, corner, COLOR_RED, 1, 2, 2, 1);
-            putText(matColor, String.valueOf(orderedPoints.indexOf(corner)), corner, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-        }
+        drawMarker(matColor, new Point(cornerMatrix.get(1,9)[0], cornerMatrix.get(1,9)[1]), COLOR_RED, 1, 2, 2, 1);
 
         return matColor;
     }
