@@ -727,15 +727,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
 
-//        Point[][] cornersArray = new Point[(int) chessboardSize.height][(int) chessboardSize.width];
+        Mat cornerMatrix = zeros(chessboardSize, CV_32F);
+        if(orderedPoints.size() <= chessboardSize.width * chessboardSize.height) {
+            int currentRow = 0;
+            int currentColumn = 0;
+            double currentY = chessboardRotationMatrix.get(1, 0)[0] * orderedPoints.get(0).x + chessboardRotationMatrix.get(1, 1)[0] * orderedPoints.get(0).y + chessboardRotationMatrix.get(1, 2)[0];;
+            for (Point corner : orderedPoints) {
+                double yPrime = chessboardRotationMatrix.get(1, 0)[0] * corner.x + chessboardRotationMatrix.get(1, 1)[0] * corner.y + chessboardRotationMatrix.get(1, 2)[0];
+                if(abs(yPrime - currentY) > 20) {
+                    currentRow++;
+                    currentColumn = 0;
+                } else {
+                    cornerMatrix.put(currentRow, currentColumn, corner.x, corner.y);
+                    currentColumn++;
+                }
+                currentY = yPrime;
+            }
+        }
 
-//        for(int i = 0, j = 0; i * j < chessboardSize.height * chessboardSize.width - 1;) {
-//            cornersArray[i][j] = orderedPoints.get(i * j);
-//            if(j == chessboardSize.width - 1) {
-//                j = 0;
-//                i++;
-//            }
-//        }
+        Log.d("Debug:", "" + cornerMatrix.size());
 
         for(Point corner : orderedPoints) {
             drawMarker(matColor, corner, COLOR_RED, 1, 2, 2, 1);
