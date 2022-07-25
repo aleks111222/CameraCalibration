@@ -729,7 +729,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
 
-        Mat cornerMatrix = new Mat(chessboardSize, CV_64FC2);
+        Mat cornerMatrix = zeros(chessboardSize, CV_64FC2);
         if(orderedPoints.size() <= chessboardSize.width * chessboardSize.height) {
             int currentRow = 0;
             int currentColumn = 0;
@@ -746,12 +746,63 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
 
+        double averageHorizontalCrossratioX = 0;
+        double averageVerticalCrossratioY = 0;
+        double sumOfCrossratios = 0;
+        int numOfValidCrossratios = 0;
+        if (cornerMatrix.rows() >= 4 && cornerMatrix.cols() >= 4) {
+            for (int i = 0; i < cornerMatrix.rows(); i++) {
+                for (int j = 1; j + 2 < cornerMatrix.cols(); j++) {
+                    double xiMin1 = cornerMatrix.get(i, j - 1)[0];
+                    double xi = cornerMatrix.get(i, j)[0];
+                    double xiPlus1 = cornerMatrix.get(i, j + 1)[0];
+                    double xiPlus2 = cornerMatrix.get(i, j + 2)[0];
+                    if (xiPlus1 - xiMin1 == 0 || xiPlus2 - xiPlus1 == 0) {
+                        continue;
+                    }
+                    double crossratio = ((xi - xiMin1) / (xiPlus1 - xiMin1)) /
+                                        ((xiPlus2 - xi) / (xiPlus2 - xiPlus1));
+                    if(abs(crossratio - 0.25) < 0.05) {
+                        numOfValidCrossratios++;
+                        sumOfCrossratios += crossratio;
+                    }
+                }
+            }
+            if(numOfValidCrossratios > 0) {
+                averageHorizontalCrossratioX = sumOfCrossratios / numOfValidCrossratios;
+            }
+
+            numOfValidCrossratios = 0;
+            sumOfCrossratios = 0;
+            for (int i = 0; i < cornerMatrix.cols(); i++) {
+                for (int j = 1; j + 2 < cornerMatrix.rows(); j++) {
+                    double yiMin1 = cornerMatrix.get(j - 1, i)[1];
+                    double yi = cornerMatrix.get(j, i)[1];
+                    double yiPlus1 = cornerMatrix.get(j + 1, i)[1];
+                    double yiPlus2 = cornerMatrix.get(j + 2, i)[1];
+                    if (yiPlus1 - yiMin1 == 0 || yiPlus2 - yiPlus1 == 0) {
+                        continue;
+                    }
+                    double crossratio = ((yi - yiMin1) / (yiPlus1 - yiMin1)) /
+                            ((yiPlus2 - yi) / (yiPlus2 - yiPlus1));
+                    if(abs(crossratio - 0.25) < 0.05) {
+                        numOfValidCrossratios++;
+                        sumOfCrossratios += crossratio;
+                    }
+                }
+            }
+            if(numOfValidCrossratios > 0) {
+                averageVerticalCrossratioY = sumOfCrossratios / numOfValidCrossratios;
+            }
+            Log.d("Debug", "" + averageVerticalCrossratioY);
+        }
+
+
+
 //        for(Point corner : orderedPoints) {
 //            drawMarker(matColor, corner, COLOR_RED, 1, 2, 2, 1);
 //            putText(matColor, String.valueOf(orderedPoints.indexOf(corner)), corner, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
 //        }
-
-        drawMarker(matColor, new Point(cornerMatrix.get(1,9)[0], cornerMatrix.get(1,9)[1]), COLOR_RED, 1, 2, 2, 1);
 
         return matColor;
     }
