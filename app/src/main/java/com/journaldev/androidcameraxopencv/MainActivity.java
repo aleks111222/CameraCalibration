@@ -665,8 +665,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         MatOfPoint corners = new MatOfPoint();
 //        List<Point> cornersReduced = new ArrayList<>();
 
-        Mat emptyMat = new Mat();
-        goodFeaturesToTrack(matGrey, corners, (int) (chessboardSize.width * chessboardSize.height), 0.3, 50, emptyMat, 3, true, 0.04);
+//        Mat emptyMat = new Mat();
+//        goodFeaturesToTrack(matGrey, corners, (int) (chessboardSize.width * chessboardSize.height), 0.3, 50, emptyMat, 3, true, 0.04);
+
+        Mat linesMat = new Mat();
+        HoughLinesP(matGrey, linesMat, 1, PI / 180, 100, 100,80);
+
+        for(int i = 0; i < linesMat.rows(); i++) {
+            line(
+                    matColor,
+                    new Point(linesMat.get(i,0)[0], linesMat.get(i,0)[1]),
+                    new Point(linesMat.get(i,0)[2], linesMat.get(i,0)[3]),
+                    COLOR_RED, 3, LINE_AA, 0);
+        }
+
+
 
 //        for(int index = 0; index < corners.toList().size() - 1; index++) {
 //            if(!(sqrt(pow(corners.toArray()[index].x - corners.toArray()[index + 1].x, 2) + pow(corners.toArray()[index].y - corners.toArray()[index + 1].y, 2)) < 15)) {
@@ -709,130 +722,47 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         List<Point> orderedPoints = corners.toList();
 
-        double angle = rotatedRectangle.angle;
+//        double angle = rotatedRectangle.angle;
+//
+//        if (rotatedRectangle.size.width < rotatedRectangle.size.height) {
+//            angle += 90;
+//        }
+//
+//        putText(matColor, "angle = " + angle, new Point(200,200), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
+//
+//        Mat chessboardRotationMatrix = getRotationMatrix2D(rotatedRectangle.center, angle, 1);
+//
+//        Collections.sort(orderedPoints, new Comparator<Point>() {
+//            public int compare(Point x1, Point x2) {
+//                double x1Prime = chessboardRotationMatrix.get(0,0)[0] * x1.x + chessboardRotationMatrix.get(0,1)[0] * x1.y + chessboardRotationMatrix.get(0,2)[0];
+//                double y1Prime = chessboardRotationMatrix.get(1,0)[0] * x1.x + chessboardRotationMatrix.get(1,1)[0] * x1.y + chessboardRotationMatrix.get(1,2)[0];
+//                double x2Prime = chessboardRotationMatrix.get(0,0)[0] * x2.x + chessboardRotationMatrix.get(0,1)[0] * x2.y + chessboardRotationMatrix.get(0,2)[0];
+//                double y2Prime = chessboardRotationMatrix.get(1,0)[0] * x2.x + chessboardRotationMatrix.get(1,1)[0] * x2.y + chessboardRotationMatrix.get(1,2)[0];
+//                return Double.compare(100 * y1Prime + 10 * x1Prime, 100 * y2Prime + 10 * x2Prime);
+//            }
+//        });
 
-        if (rotatedRectangle.size.width < rotatedRectangle.size.height) {
-            angle += 90;
-        }
-
-        putText(matColor, "angle = " + angle, new Point(200,200), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
-
-        Mat chessboardRotationMatrix = getRotationMatrix2D(rotatedRectangle.center, angle, 1);
-
-        Collections.sort(orderedPoints, new Comparator<Point>() {
-            public int compare(Point x1, Point x2) {
-                double x1Prime = chessboardRotationMatrix.get(0,0)[0] * x1.x + chessboardRotationMatrix.get(0,1)[0] * x1.y + chessboardRotationMatrix.get(0,2)[0];
-                double y1Prime = chessboardRotationMatrix.get(1,0)[0] * x1.x + chessboardRotationMatrix.get(1,1)[0] * x1.y + chessboardRotationMatrix.get(1,2)[0];
-                double x2Prime = chessboardRotationMatrix.get(0,0)[0] * x2.x + chessboardRotationMatrix.get(0,1)[0] * x2.y + chessboardRotationMatrix.get(0,2)[0];
-                double y2Prime = chessboardRotationMatrix.get(1,0)[0] * x2.x + chessboardRotationMatrix.get(1,1)[0] * x2.y + chessboardRotationMatrix.get(1,2)[0];
-                return Double.compare(100 * y1Prime + 10 * x1Prime, 100 * y2Prime + 10 * x2Prime);
-            }
-        });
-
-        Mat cornerMatrix = zeros(chessboardSize, CV_64FC2);
-        if(orderedPoints.size() <= chessboardSize.width * chessboardSize.height) {
-            int currentRow = 0;
-            int currentColumn = 0;
-            double currentY = chessboardRotationMatrix.get(1, 0)[0] * orderedPoints.get(0).x + chessboardRotationMatrix.get(1, 1)[0] * orderedPoints.get(0).y + chessboardRotationMatrix.get(1, 2)[0];;
-            for (Point corner : orderedPoints) {
-                double yPrime = chessboardRotationMatrix.get(1, 0)[0] * corner.x + chessboardRotationMatrix.get(1, 1)[0] * corner.y + chessboardRotationMatrix.get(1, 2)[0];
-                if(abs(yPrime - currentY) > 20) {
-                    currentRow++;
-                    currentColumn = 0;
-                }
-                cornerMatrix.put(currentRow, currentColumn, corner.x, corner.y);
-                currentColumn++;
-                currentY = yPrime;
-            }
-        }
-
-        double averageHorizontalCrossratioX = 0;
-        double averageVerticalCrossratioY = 0;
-        double sumOfCrossratios = 0;
-        int numOfValidCrossratios = 0;
-        if (cornerMatrix.rows() >= 4 && cornerMatrix.cols() >= 4) {
-            for (int i = 0; i < cornerMatrix.rows(); i++) {
-                for (int j = 1; j + 2 < cornerMatrix.cols(); j++) {
-                    double xiMin1 = cornerMatrix.get(i, j - 1)[0];
-                    double xi = cornerMatrix.get(i, j)[0];
-                    double xiPlus1 = cornerMatrix.get(i, j + 1)[0];
-                    double xiPlus2 = cornerMatrix.get(i, j + 2)[0];
-                    if (xiPlus1 - xiMin1 == 0 || xiPlus2 - xiPlus1 == 0) {
-                        continue;
-                    }
-                    double crossratio = ((xi - xiMin1) / (xiPlus1 - xiMin1)) /
-                                        ((xiPlus2 - xi) / (xiPlus2 - xiPlus1));
-                    if(abs(crossratio - 0.25) < 0.05) {
-                        numOfValidCrossratios++;
-                        sumOfCrossratios += crossratio;
-                    } else {
-
-                    }
-                }
-            }
-            if(numOfValidCrossratios > 0) {
-                averageHorizontalCrossratioX = sumOfCrossratios / numOfValidCrossratios;
-            }
-
-            numOfValidCrossratios = 0;
-            sumOfCrossratios = 0;
-            for (int i = 0; i < cornerMatrix.cols(); i++) {
-                for (int j = 1; j + 2 < cornerMatrix.rows(); j++) {
-                    double yiMin1 = cornerMatrix.get(j - 1, i)[1];
-                    double yi = cornerMatrix.get(j, i)[1];
-                    double yiPlus1 = cornerMatrix.get(j + 1, i)[1];
-                    double yiPlus2 = cornerMatrix.get(j + 2, i)[1];
-                    if (yiPlus1 - yiMin1 == 0 || yiPlus2 - yiPlus1 == 0) {
-                        continue;
-                    }
-                    double crossratio = ((yi - yiMin1) / (yiPlus1 - yiMin1)) /
-                            ((yiPlus2 - yi) / (yiPlus2 - yiPlus1));
-                    if(abs(crossratio - 0.25) < 0.05) {
-                        numOfValidCrossratios++;
-                        sumOfCrossratios += crossratio;
-                    }
-                }
-            }
-            if(numOfValidCrossratios > 0) {
-                averageVerticalCrossratioY = sumOfCrossratios / numOfValidCrossratios;
-            }
-        }
-        if (cornerMatrix.rows() >= 4 && cornerMatrix.cols() >= 4) {
-            for (int i = 0; i < cornerMatrix.rows(); i++) {
-                for (int j = 1; j + 2 < cornerMatrix.cols(); j++) {
-                    double xiMin1 = cornerMatrix.get(i, j - 1)[0];
-                    double xi = cornerMatrix.get(i, j)[0];
-                    double xiPlus1 = cornerMatrix.get(i, j + 1)[0];
-                    double xiPlus2 = cornerMatrix.get(i, j + 2)[0];
-                    double adjacencyRatioX = (xiPlus1 - xi) / (xi - xiMin1);
-                    double li = xiPlus1 - xi;
-                    double xiPlus2Est = xiPlus1 + ((averageHorizontalCrossratioX * (1 + adjacencyRatioX)) / (1 - averageHorizontalCrossratioX * (1 + adjacencyRatioX))) * li;
-                    if (abs(xiPlus2Est - xiPlus2) > 10) {
-                        cornerMatrix.put(i, j + 2, xiPlus2Est, cornerMatrix.get(i, j + 2)[1]);
-                    }
-                }
-            }
-
-            for (int i = 0; i < cornerMatrix.cols(); i++) {
-                for (int j = 1; j + 2 < cornerMatrix.rows(); j++) {
-                    double yiMin1 = cornerMatrix.get(j - 1, i)[1];
-                    double yi = cornerMatrix.get(j, i)[1];
-                    double yiPlus1 = cornerMatrix.get(j + 1, i)[1];
-                    double yiPlus2 = cornerMatrix.get(j + 2, i)[1];
-                    double adjacencyRatioY = (yiPlus1 - yi) / (yi - yiMin1);
-                    double li = yiPlus1 - yi;
-                    double yiPlus2Est = yiPlus1 + ((averageVerticalCrossratioY * (1 + adjacencyRatioY)) / (1 - averageVerticalCrossratioY * (1 + adjacencyRatioY))) * li;
-                    if (abs(yiPlus2Est - yiPlus2) > 10) {
-                        cornerMatrix.put(j + 2, i, cornerMatrix.get(j + 2, i)[0], yiPlus2Est);
-                    }
-                }
-            }
-        }
-
-        for(Point corner : orderedPoints) {
-            drawMarker(matColor, corner, COLOR_RED, 1, 2, 2, 1);
-            putText(matColor, String.valueOf(orderedPoints.indexOf(corner)), corner, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-        }
+//        Mat cornerMatrix = zeros(chessboardSize, CV_64FC2);
+//        if(orderedPoints.size() <= chessboardSize.width * chessboardSize.height) {
+//            int currentRow = 0;
+//            int currentColumn = 0;
+//            double currentY = chessboardRotationMatrix.get(1, 0)[0] * orderedPoints.get(0).x + chessboardRotationMatrix.get(1, 1)[0] * orderedPoints.get(0).y + chessboardRotationMatrix.get(1, 2)[0];;
+//            for (Point corner : orderedPoints) {
+//                double yPrime = chessboardRotationMatrix.get(1, 0)[0] * corner.x + chessboardRotationMatrix.get(1, 1)[0] * corner.y + chessboardRotationMatrix.get(1, 2)[0];
+//                if(abs(yPrime - currentY) > 20) {
+//                    currentRow++;
+//                    currentColumn = 0;
+//                }
+//                cornerMatrix.put(currentRow, currentColumn, corner.x, corner.y);
+//                currentColumn++;
+//                currentY = yPrime;
+//            }
+//        }
+//
+//        for(Point corner : orderedPoints) {
+//            drawMarker(matColor, corner, COLOR_RED, 1, 2, 2, 1);
+//            putText(matColor, String.valueOf(orderedPoints.indexOf(corner)), corner, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+//        }
 
         return matColor;
     }
