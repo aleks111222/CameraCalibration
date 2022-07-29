@@ -654,9 +654,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Core.bitwise_and(matGrey, maskMatrix, matGrey);
 
         maskMatrix = zeros(new org.opencv.core.Size(matGrey.width() + 2, matGrey.height() + 2), CV_8U);
-//        floodFill(matGrey, maskMatrix, new Point(0,0), new Scalar(255, 255));
+        floodFill(matGrey, maskMatrix, new Point(0,0), new Scalar(255, 255));
 
-//        Canny(matGrey, matGrey, 90, 150, 3, true); // co to ten l2gradient?
+        Canny(matGrey, matGrey, 90, 150, 3, true); // co to ten l2gradient?
 //        Mat kernel = ones(3,3, CV_8U);
 //        dilate(matGrey, matGrey, kernel);
 //        kernel = ones(5,5, CV_8U);
@@ -765,6 +765,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     if(abs(crossratio - 0.25) < 0.05) {
                         numOfValidCrossratios++;
                         sumOfCrossratios += crossratio;
+                    } else {
+
                     }
                 }
             }
@@ -794,15 +796,43 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if(numOfValidCrossratios > 0) {
                 averageVerticalCrossratioY = sumOfCrossratios / numOfValidCrossratios;
             }
-            Log.d("Debug", "" + averageVerticalCrossratioY);
+        }
+        if (cornerMatrix.rows() >= 4 && cornerMatrix.cols() >= 4) {
+            for (int i = 0; i < cornerMatrix.rows(); i++) {
+                for (int j = 1; j + 2 < cornerMatrix.cols(); j++) {
+                    double xiMin1 = cornerMatrix.get(i, j - 1)[0];
+                    double xi = cornerMatrix.get(i, j)[0];
+                    double xiPlus1 = cornerMatrix.get(i, j + 1)[0];
+                    double xiPlus2 = cornerMatrix.get(i, j + 2)[0];
+                    double adjacencyRatioX = (xiPlus1 - xi) / (xi - xiMin1);
+                    double li = xiPlus1 - xi;
+                    double xiPlus2Est = xiPlus1 + ((averageHorizontalCrossratioX * (1 + adjacencyRatioX)) / (1 - averageHorizontalCrossratioX * (1 + adjacencyRatioX))) * li;
+                    if (abs(xiPlus2Est - xiPlus2) > 10) {
+                        cornerMatrix.put(i, j + 2, xiPlus2Est, cornerMatrix.get(i, j + 2)[1]);
+                    }
+                }
+            }
+
+            for (int i = 0; i < cornerMatrix.cols(); i++) {
+                for (int j = 1; j + 2 < cornerMatrix.rows(); j++) {
+                    double yiMin1 = cornerMatrix.get(j - 1, i)[1];
+                    double yi = cornerMatrix.get(j, i)[1];
+                    double yiPlus1 = cornerMatrix.get(j + 1, i)[1];
+                    double yiPlus2 = cornerMatrix.get(j + 2, i)[1];
+                    double adjacencyRatioY = (yiPlus1 - yi) / (yi - yiMin1);
+                    double li = yiPlus1 - yi;
+                    double yiPlus2Est = yiPlus1 + ((averageVerticalCrossratioY * (1 + adjacencyRatioY)) / (1 - averageVerticalCrossratioY * (1 + adjacencyRatioY))) * li;
+                    if (abs(yiPlus2Est - yiPlus2) > 10) {
+                        cornerMatrix.put(j + 2, i, cornerMatrix.get(j + 2, i)[0], yiPlus2Est);
+                    }
+                }
+            }
         }
 
-
-
-//        for(Point corner : orderedPoints) {
-//            drawMarker(matColor, corner, COLOR_RED, 1, 2, 2, 1);
-//            putText(matColor, String.valueOf(orderedPoints.indexOf(corner)), corner, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-//        }
+        for(Point corner : orderedPoints) {
+            drawMarker(matColor, corner, COLOR_RED, 1, 2, 2, 1);
+            putText(matColor, String.valueOf(orderedPoints.indexOf(corner)), corner, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+        }
 
         return matColor;
     }
