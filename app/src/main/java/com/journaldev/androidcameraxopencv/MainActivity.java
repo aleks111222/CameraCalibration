@@ -56,6 +56,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.graphics.PointF;
 import android.media.ExifInterface;
 import android.os.Bundle;
@@ -699,7 +700,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 //        HoughLinesP(matGrey, linesMat, 1, PI / 180, 100, 100,80);
 
-        HoughLines(matGrey, linesMat,1,CV_PI / 180,200);
+        HoughLines(matGrey, linesMat,1,CV_PI / 180,120);
 
         for(int i = 0; i < linesMat.rows(); i++) {
             double rho = linesMat.get(i, 0)[0];
@@ -710,13 +711,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             double y0 = sinTheta * rho;
             Point P1 = new Point(x0 + 10000 * (-sinTheta), y0 + 10000 * cosTheta);
             Point P2 = new Point(x0 - 10000 * (-sinTheta), y0 - 10000 * cosTheta);
-            if (angle > 0 && abs(theta * 180 / CV_PI - angle) < 5) {
+            if (angle >= 0 && abs(theta * 180 / CV_PI - angle) < 5) {
                 verticallLines.add(new Pair<>(P1, P2));
-            } else if (angle < 0 && abs(theta * 180 / CV_PI - (angle + 180)) < 5) {
+            } else if (angle <= 0 && abs(theta * 180 / CV_PI - (angle + 180)) < 5) {
                 verticallLines.add(new Pair<>(P1, P2));
             } else {
                 horizontalLines.add(new Pair<>(P1,P2));
             }
+        }
+
+        for (Pair p : horizontalLines) {
+            line(matColor, (Point) p.getL(), (Point) p.getR(), COLOR_RED, 2);
         }
 
         Log.d("Debug", "" + horizontalLines.size());
