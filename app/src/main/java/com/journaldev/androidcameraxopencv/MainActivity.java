@@ -667,10 +667,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        erode(matGrey, matGrey, kernel);
 
         MatOfPoint corners = new MatOfPoint();
+
 //        List<Point> cornersReduced = new ArrayList<>();
 
-//        Mat emptyMat = new Mat();
-//        goodFeaturesToTrack(matGrey, corners, (int) (chessboardSize.width * chessboardSize.height), 0.3, 50, emptyMat, 3, true, 0.04);
+        Mat emptyMat = new Mat();
+        goodFeaturesToTrack(matGrey, corners, (int) (chessboardSize.width * chessboardSize.height), 0.2, 50, emptyMat, 3, true, 0.04);
 
         class Pair<L,R> {
             private L l;
@@ -687,8 +688,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         MatOfPoint2f bestContour2f = new MatOfPoint2f(bestContour.toArray());
         RotatedRect rotatedRectangle = minAreaRect(bestContour2f);
-
-        List<Point> orderedPoints = corners.toList();
 
         double angle = rotatedRectangle.angle;
 
@@ -748,18 +747,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     if (abs(theta1 - theta2) > 0.083 * CV_PI) { // 15 degrees
                         double xIntersection = (sint2 * rho1 - sint1 * rho2) / d;
                         double yIntersection = (-cost2 * rho1 + cost1 * rho2) / d;
-
                         intersectionPoints.add(new Point(xIntersection, yIntersection));
                     }
                 }
             }
         }
 
-//        Log.d("Debug", "" + intersectionPoints.size());
+        List<Point> orderedPoints = new ArrayList<>();
 
-        for (Point p : intersectionPoints) {
-            drawMarker(matColor, p, COLOR_RED, 1, 2, 2, 1);
+        for (Point corner : corners.toArray()) {
+            for (Point gridPoint : intersectionPoints) {
+                if (abs(corner.x - gridPoint.x) < 10 && abs(corner.y - gridPoint.y) < 10) {
+                    orderedPoints.add(corner);
+                    break;
+                }
+            }
         }
+
+//        for (Point p : orderedPoints) {
+//            drawMarker(matColor, p, COLOR_RED, 1, 2, 2, 1);
+//        }
+//
+//        Log.d("Debug", "" + orderedPoints.size());
 
 //        for(int index = 0; index < corners.toList().size() - 1; index++) {
 //            if(!(sqrt(pow(corners.toArray()[index].x - corners.toArray()[index + 1].x, 2) + pow(corners.toArray()[index].y - corners.toArray()[index + 1].y, 2)) < 15)) {
@@ -767,71 +776,40 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //            }
 //        }
 
-//        Point lowestXlowestY = new Point(9999,9999);
-//        Point highestXhighestY = new Point(-9999,-9999);
-//        Point highestXlowestY = new Point(-9999,9999);
-//        Point lowestXhighestY = new Point(9999,-9999);
-//
-//        for(Point cornerPoint : corners.toArray()) {
-//            if(cornerPoint.x < lowestXlowestY.x && cornerPoint.y < lowestXlowestY.y) {
-//                lowestXlowestY = cornerPoint;
-//            }
-//            if(cornerPoint.x > highestXhighestY.x && cornerPoint.y > highestXhighestY.y) {
-//                highestXhighestY = cornerPoint;
-//            }
-//            if(cornerPoint.x > highestXlowestY.x && cornerPoint.y < highestXlowestY.y) {
-//                highestXlowestY = cornerPoint;
-//            }
-//            if(cornerPoint.x < lowestXhighestY.x && cornerPoint.y > lowestXhighestY.y) {
-//                lowestXhighestY = cornerPoint;
-//            }
-//        }
-//
-//        drawMarker(matColor, lowestXlowestY, COLOR_BLUE, 2, 8, 5, 1);
-//        drawMarker(matColor, highestXhighestY, COLOR_BLUE, 2, 8, 5, 1);
-//        drawMarker(matColor, highestXlowestY, COLOR_BLUE, 2, 8, 5, 1);
-//        drawMarker(matColor, lowestXlowestY, COLOR_BLUE, 2, 8, 5, 1);
-//
-//        putText(matColor, "" + lowestXlowestY.x + " " + lowestXlowestY.y, lowestXlowestY, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-//        putText(matColor, "" + lowestXlowestY.x + " " + lowestXlowestY.y, lowestXhighestY, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-//        putText(matColor, "lowestY" + lowestY.y, lowestY, FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
-//        putText(matColor, "highestY" + highestY.y, highestY, FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
+//        putText(matColor, "angle = " + angle, new Point(200,200), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
+        Mat chessboardRotationMatrix = getRotationMatrix2D(rotatedRectangle.center, angle, 1);
 
-        putText(matColor, "angle = " + angle, new Point(200,200), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
-//
-//        Mat chessboardRotationMatrix = getRotationMatrix2D(rotatedRectangle.center, angle, 1);
-//
-//        Collections.sort(orderedPoints, new Comparator<Point>() {
-//            public int compare(Point x1, Point x2) {
-//                double x1Prime = chessboardRotationMatrix.get(0,0)[0] * x1.x + chessboardRotationMatrix.get(0,1)[0] * x1.y + chessboardRotationMatrix.get(0,2)[0];
-//                double y1Prime = chessboardRotationMatrix.get(1,0)[0] * x1.x + chessboardRotationMatrix.get(1,1)[0] * x1.y + chessboardRotationMatrix.get(1,2)[0];
-//                double x2Prime = chessboardRotationMatrix.get(0,0)[0] * x2.x + chessboardRotationMatrix.get(0,1)[0] * x2.y + chessboardRotationMatrix.get(0,2)[0];
-//                double y2Prime = chessboardRotationMatrix.get(1,0)[0] * x2.x + chessboardRotationMatrix.get(1,1)[0] * x2.y + chessboardRotationMatrix.get(1,2)[0];
-//                return Double.compare(100 * y1Prime + 10 * x1Prime, 100 * y2Prime + 10 * x2Prime);
-//            }
-//        });
+        Collections.sort(orderedPoints, new Comparator<Point>() {
+            public int compare(Point x1, Point x2) {
+                double x1Prime = chessboardRotationMatrix.get(0,0)[0] * x1.x + chessboardRotationMatrix.get(0,1)[0] * x1.y + chessboardRotationMatrix.get(0,2)[0];
+                double y1Prime = chessboardRotationMatrix.get(1,0)[0] * x1.x + chessboardRotationMatrix.get(1,1)[0] * x1.y + chessboardRotationMatrix.get(1,2)[0];
+                double x2Prime = chessboardRotationMatrix.get(0,0)[0] * x2.x + chessboardRotationMatrix.get(0,1)[0] * x2.y + chessboardRotationMatrix.get(0,2)[0];
+                double y2Prime = chessboardRotationMatrix.get(1,0)[0] * x2.x + chessboardRotationMatrix.get(1,1)[0] * x2.y + chessboardRotationMatrix.get(1,2)[0];
+                return Double.compare(100 * y1Prime + 10 * x1Prime, 100 * y2Prime + 10 * x2Prime);
+            }
+        });
 
-//        Mat cornerMatrix = zeros(chessboardSize, CV_64FC2);
-//        if(orderedPoints.size() <= chessboardSize.width * chessboardSize.height) {
-//            int currentRow = 0;
-//            int currentColumn = 0;
-//            double currentY = chessboardRotationMatrix.get(1, 0)[0] * orderedPoints.get(0).x + chessboardRotationMatrix.get(1, 1)[0] * orderedPoints.get(0).y + chessboardRotationMatrix.get(1, 2)[0];;
-//            for (Point corner : orderedPoints) {
-//                double yPrime = chessboardRotationMatrix.get(1, 0)[0] * corner.x + chessboardRotationMatrix.get(1, 1)[0] * corner.y + chessboardRotationMatrix.get(1, 2)[0];
-//                if(abs(yPrime - currentY) > 20) {
-//                    currentRow++;
-//                    currentColumn = 0;
-//                }
-//                cornerMatrix.put(currentRow, currentColumn, corner.x, corner.y);
-//                currentColumn++;
-//                currentY = yPrime;
-//            }
-//        }
-//
-//        for(Point corner : orderedPoints) {
-//            drawMarker(matColor, corner, COLOR_RED, 1, 2, 2, 1);
-//            putText(matColor, String.valueOf(orderedPoints.indexOf(corner)), corner, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-//        }
+        Mat cornerMatrix = zeros(chessboardSize, CV_64FC2);
+        if(orderedPoints.size() <= chessboardSize.width * chessboardSize.height) {
+            int currentRow = 0;
+            int currentColumn = 0;
+            double currentY = chessboardRotationMatrix.get(1, 0)[0] * orderedPoints.get(0).x + chessboardRotationMatrix.get(1, 1)[0] * orderedPoints.get(0).y + chessboardRotationMatrix.get(1, 2)[0];;
+            for (Point corner : orderedPoints) {
+                double yPrime = chessboardRotationMatrix.get(1, 0)[0] * corner.x + chessboardRotationMatrix.get(1, 1)[0] * corner.y + chessboardRotationMatrix.get(1, 2)[0];
+                if(abs(yPrime - currentY) > 20) {
+                    currentRow++;
+                    currentColumn = 0;
+                }
+                cornerMatrix.put(currentRow, currentColumn, corner.x, corner.y);
+                currentColumn++;
+                currentY = yPrime;
+            }
+        }
+
+        for(Point corner : orderedPoints) {
+            drawMarker(matColor, corner, COLOR_RED, 1, 2, 2, 1);
+            putText(matColor, String.valueOf(orderedPoints.indexOf(corner)), corner, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+        }
 
         return matColor;
     }
