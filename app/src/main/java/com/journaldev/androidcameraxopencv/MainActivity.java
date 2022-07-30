@@ -700,7 +700,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 //        HoughLinesP(matGrey, linesMat, 1, PI / 180, 100, 100,80);
 
-        HoughLines(matGrey, linesMat,1,CV_PI / 180,120);
+        HoughLines(matGrey, linesMat,1,CV_PI / 180,100);
 
         boolean isRedundant;
         for(int i = 0; i < linesMat.rows(); i++) {
@@ -719,8 +719,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
 
-        Log.d("Debug", "" + lines.size());
-
         for (Pair p : lines) {
             double rho = (double) p.getL();
             double theta = (double) p.getR();
@@ -734,12 +732,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         List<Point> intersectionPoints = new ArrayList<>();
+        if (lines.size() > 1) {
+            for (int i = 0; i < lines.size(); i++) {
+                double rho1 = lines.get(i).getL();
+                double theta1 = lines.get(i).getR();
+                for (int j = i + 1; j < lines.size(); j++) {
+                    double rho2 = lines.get(j).getL();
+                    double theta2 = lines.get(j).getR();
 
-//        for (Pair h : horizontalLines) {
-//            for (Pair v : verticallLines) {
-//                double a1 = 1 / atan()
-//            }
-//        }
+                    if (abs(theta1 - theta2) > 0.083 * CV_PI) { // 15 degrees
+                        double a1 = 1 / atan(theta1);
+                        double a2 = 1 / atan(theta2);
+
+                        double xIntersection = (rho2 - rho1) / (a1 - a2);
+                        double yIntersection = (a1 * rho2 - a2 * rho1) / (a1 - a2);
+
+                        intersectionPoints.add(new Point(xIntersection, yIntersection));
+                    }
+                }
+            }
+        }
+
+        Log.d("Debug", "" + intersectionPoints.size());
 
 //        for(int index = 0; index < corners.toList().size() - 1; index++) {
 //            if(!(sqrt(pow(corners.toArray()[index].x - corners.toArray()[index + 1].x, 2) + pow(corners.toArray()[index].y - corners.toArray()[index + 1].y, 2)) < 15)) {
