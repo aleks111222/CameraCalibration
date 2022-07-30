@@ -95,6 +95,7 @@ import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
 import org.opencv.core.TermCriteria;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.imgproc.Moments;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -130,7 +131,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     org.opencv.core.Size chessboardSize = new org.opencv.core.Size(10,8);
     org.opencv.core.Size circleGridSize = new org.opencv.core.Size(4,11);
 
-    String currentImageProcessing = "CHESSBOARD";
+    String currentImageProcessing = "ASSYMETRIC_CIRCLES";
 
     ImageCapture imageCapture;
     ImageAnalysis imageAnalysis;
@@ -318,14 +319,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 circle(matColor, new Point(imagePoint.x, imagePoint.y), 3, COLOR_RED, -1);
                             }*/
                         } else if (currentImageProcessing.equals("ASSYMETRIC_CIRCLES")) {
-                            Mat centers = new Mat();
-                            centers = getAssymetricCircleCenters(bitmap);
-                            if(centers.size().width * centers.size().height == circleGridSize.width * circleGridSize.height) {
-                                drawMarker(matColor, new Point(centers.get(0, 0)[0], centers.get(0, 0)[1]), COLOR_RED, 1, 10, 5, 1);
-                                drawMarker(matColor, new Point(centers.get((int) circleGridSize.width - 1, 0)[0], centers.get((int) circleGridSize.width - 1, 0)[1]), COLOR_BLUE, 1, 10, 5, 1);
-                                drawMarker(matColor, new Point(centers.get((int) (circleGridSize.width * (circleGridSize.height - 1)), 0)[0], centers.get((int) (circleGridSize.width * (circleGridSize.height - 1)), 0)[1]), COLOR_GREEN, 1, 10, 5, 1);
-                                drawMarker(matColor, new Point(centers.get((int) (circleGridSize.width * (circleGridSize.height) - 1), 0)[0], centers.get((int) (circleGridSize.width * (circleGridSize.height) - 1), 0)[1]), COLOR_YELLOW, 1, 10, 5, 1);
-                            }
+                            matColor = getAssymetricCircleCenters(bitmap);
+//                            Mat centers = new Mat();
+//                            centers = getAssymetricCircleCenters(bitmap);
+//                            if(centers.size().width * centers.size().height == circleGridSize.width * circleGridSize.height) {
+//                                drawMarker(matColor, new Point(centers.get(0, 0)[0], centers.get(0, 0)[1]), COLOR_RED, 1, 10, 5, 1);
+//                                drawMarker(matColor, new Point(centers.get((int) circleGridSize.width - 1, 0)[0], centers.get((int) circleGridSize.width - 1, 0)[1]), COLOR_BLUE, 1, 10, 5, 1);
+//                                drawMarker(matColor, new Point(centers.get((int) (circleGridSize.width * (circleGridSize.height - 1)), 0)[0], centers.get((int) (circleGridSize.width * (circleGridSize.height - 1)), 0)[1]), COLOR_GREEN, 1, 10, 5, 1);
+//                                drawMarker(matColor, new Point(centers.get((int) (circleGridSize.width * (circleGridSize.height) - 1), 0)[0], centers.get((int) (circleGridSize.width * (circleGridSize.height) - 1), 0)[1]), COLOR_YELLOW, 1, 10, 5, 1);
+//                            }
                         }
 //---------------------------------------------------------------------------
 
@@ -583,20 +585,51 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Mat getAssymetricCircleCenters(Bitmap bitmap) {
         Mat matColor = new Mat();
         Mat matGrey = new Mat();
-        Mat matGreyDownscaled = new Mat();
-        Mat centers = new Mat();
-        boolean result;
 
         Utils.bitmapToMat(bitmap, matColor);
         cvtColor(matColor, matGrey, COLOR_BGR2GRAY);
 
-        //resize(matGrey, matGreyDownscaled, new org.opencv.core.Size(), 0.25, 0.25, INTER_NEAREST);
+        threshold(matGrey, matGrey,127,255, THRESH_BINARY);
+        normalize(matGrey, matGrey, 0, 255, NORM_MINMAX);
 
-        result = findCirclesGrid(matGrey, circleGridSize, centers, CALIB_CB_ASYMMETRIC_GRID);
+        List<MatOfPoint> contours = new ArrayList<>();
+        Mat hierarchy = new Mat();
+        findContours(matGrey, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
 
-        //multiply(centers, new Scalar(4.0, 4.0), centers);
+        double maxArea = 0.0;
+        MatOfPoint bestContour = new MatOfPoint();
+        for(MatOfPoint contour : contours) {
+            double area = contourArea(contour);
+            if (area > 1000.0) {
+                if (area > maxArea) {
+                    maxArea = area;
+                    bestContour = contour;
+                }
+            }
+        }
 
-        return centers;
+        List<MatOfPoint> bestContourList = new ArrayList<>();
+        bestContourList.add(bestContour);
+
+        Mat maskMatrix = zeros(new org.opencv.core.Size(matGrey.width(), matGrey.height()), CV_8U);
+
+        drawContours(maskMatrix, bestContourList, 0, new Scalar(255.0, 255.0, 255.0, 255.0), -1);
+        drawContours(maskMatrix, bestContourList, 0, new Scalar(0.0, 0.0, 0.0, 0.0), 2);
+
+        Core.bitwise_and(matGrey, maskMatrix, matGrey);
+
+        maskMatrix = zeros(new org.opencv.core.Size(matGrey.width() + 2, matGrey.height() + 2), CV_8U);
+        floodFill(matGrey, maskMatrix, new Point(0,0), new Scalar(255, 255));
+        
+
+        for (MatOfPoint contour : contours) {
+            Moments moments = moments(contour);
+            double centreX = moments.m10 / (moments.m00 + 0.000001);
+            double centreY = moments.m01 / (moments.m00 + 0.000001);
+            circle(matColor, new Point(centreX, centreY), 5, COLOR_RED, -1);
+        }
+
+        return matGrey;
     }
 
     private Mat getChessboardCorners(Bitmap bitmap) {
