@@ -106,6 +106,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Vector;
 
+
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
 
@@ -656,7 +657,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         maskMatrix = zeros(new org.opencv.core.Size(matGrey.width() + 2, matGrey.height() + 2), CV_8U);
         floodFill(matGrey, maskMatrix, new Point(0,0), new Scalar(255, 255));
 
-        Canny(matGrey, matGrey, 90, 150, 3, true); // co to ten l2gradient?
+        Canny(matGrey, matGrey, 50, 150, 3, false); // co to ten l2gradient?
 //        Mat kernel = ones(3,3, CV_8U);
 //        dilate(matGrey, matGrey, kernel);
 //        kernel = ones(5,5, CV_8U);
@@ -668,16 +669,57 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        Mat emptyMat = new Mat();
 //        goodFeaturesToTrack(matGrey, corners, (int) (chessboardSize.width * chessboardSize.height), 0.3, 50, emptyMat, 3, true, 0.04);
 
+        class Pair<L,R> {
+            private L l;
+            private R r;
+            public Pair(L l, R r){
+                this.l = l;
+                this.r = r;
+            }
+            public L getL(){ return l; }
+            public R getR(){ return r; }
+            public void setL(L l){ this.l = l; }
+            public void setR(R r){ this.r = r; }
+        }
+
+        MatOfPoint2f bestContour2f = new MatOfPoint2f(bestContour.toArray());
+        RotatedRect rotatedRectangle = minAreaRect(bestContour2f);
+
+        List<Point> orderedPoints = corners.toList();
+
+        double angle = rotatedRectangle.angle;
+
+        if (rotatedRectangle.size.width < rotatedRectangle.size.height) {
+            angle += 90;
+        }
+
         Mat linesMat = new Mat();
-        HoughLinesP(matGrey, linesMat, 1, PI / 180, 100, 100,80);
+        List<Pair<Point, Point>> horizontalLines = new ArrayList<>();
+        List<Pair<Point, Point>> verticallLines = new ArrayList<>();
+
+//        HoughLinesP(matGrey, linesMat, 1, PI / 180, 100, 100,80);
+
+        HoughLines(matGrey, linesMat,1,CV_PI / 180,200);
 
         for(int i = 0; i < linesMat.rows(); i++) {
-            line(
-                    matColor,
-                    new Point(linesMat.get(i,0)[0], linesMat.get(i,0)[1]),
-                    new Point(linesMat.get(i,0)[2], linesMat.get(i,0)[3]),
-                    COLOR_RED, 3, LINE_AA, 0);
+            double rho = linesMat.get(i, 0)[0];
+            double theta = linesMat.get(i, 0)[1];
+            double cosTheta = cos(theta);
+            double sinTheta = sin(theta);
+            double x0 = cosTheta * rho;
+            double y0 = sinTheta * rho;
+            Point P1 = new Point(x0 + 10000 * (-sinTheta), y0 + 10000 * cosTheta);
+            Point P2 = new Point(x0 - 10000 * (-sinTheta), y0 - 10000 * cosTheta);
+            if (angle > 0 && abs(theta * 180 / CV_PI - angle) < 5) {
+                verticallLines.add(new Pair<>(P1, P2));
+            } else if (angle < 0 && abs(theta * 180 / CV_PI - (angle + 180)) < 5) {
+                verticallLines.add(new Pair<>(P1, P2));
+            } else {
+                horizontalLines.add(new Pair<>(P1,P2));
+            }
         }
+
+        Log.d("Debug", "" + horizontalLines.size());
 
 
 
@@ -717,18 +759,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        putText(matColor, "lowestY" + lowestY.y, lowestY, FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
 //        putText(matColor, "highestY" + highestY.y, highestY, FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
 
-        MatOfPoint2f bestContour2f = new MatOfPoint2f(bestContour.toArray());
-        RotatedRect rotatedRectangle = minAreaRect(bestContour2f);
-
-        List<Point> orderedPoints = corners.toList();
-
-//        double angle = rotatedRectangle.angle;
-//
-//        if (rotatedRectangle.size.width < rotatedRectangle.size.height) {
-//            angle += 90;
-//        }
-//
-//        putText(matColor, "angle = " + angle, new Point(200,200), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
+        putText(matColor, "angle = " + angle, new Point(200,200), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
 //
 //        Mat chessboardRotationMatrix = getRotationMatrix2D(rotatedRectangle.center, angle, 1);
 //
