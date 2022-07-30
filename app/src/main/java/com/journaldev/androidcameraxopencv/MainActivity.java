@@ -32,6 +32,7 @@ import static org.opencv.imgproc.Imgproc.fitEllipse;
 
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
+import static java.lang.Math.atan;
 import static java.lang.Math.cos;
 import static java.lang.Math.max;
 import static java.lang.Math.pow;
@@ -695,8 +696,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         Mat linesMat = new Mat();
-        List<Pair<Point, Point>> horizontalLines = new ArrayList<>();
-        List<Pair<Point, Point>> verticallLines = new ArrayList<>();
+        List<Pair<Point, Point>> lines = new ArrayList<>();
 
 //        HoughLinesP(matGrey, linesMat, 1, PI / 180, 100, 100,80);
 
@@ -711,22 +711,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             double y0 = sinTheta * rho;
             Point P1 = new Point(x0 + 10000 * (-sinTheta), y0 + 10000 * cosTheta);
             Point P2 = new Point(x0 - 10000 * (-sinTheta), y0 - 10000 * cosTheta);
-            if (angle >= 0 && abs(theta * 180 / CV_PI - angle) < 5) {
-                verticallLines.add(new Pair<>(P1, P2));
-            } else if (angle <= 0 && abs(theta * 180 / CV_PI - (angle + 180)) < 5) {
-                verticallLines.add(new Pair<>(P1, P2));
-            } else {
-                horizontalLines.add(new Pair<>(P1,P2));
-            }
+            if (abs(angle - theta * 180 / CV_PI) < 5 || abs(angle + 90 - theta * 180 / CV_PI) < 5
+            ||  abs(angle + 180 - theta * 180 / CV_PI) < 3)
+                lines.add(new Pair<>(P1, P2));
         }
 
-        for (Pair p : horizontalLines) {
+        Log.d("Debug", "" + lines.size());
+
+        for (Pair p : lines) {
             line(matColor, (Point) p.getL(), (Point) p.getR(), COLOR_RED, 2);
         }
 
-        Log.d("Debug", "" + horizontalLines.size());
+        List<Point> intersectionPoints = new ArrayList<>();
 
-
+//        for (Pair h : horizontalLines) {
+//            for (Pair v : verticallLines) {
+//                double a1 = 1 / atan()
+//            }
+//        }
 
 //        for(int index = 0; index < corners.toList().size() - 1; index++) {
 //            if(!(sqrt(pow(corners.toArray()[index].x - corners.toArray()[index + 1].x, 2) + pow(corners.toArray()[index].y - corners.toArray()[index + 1].y, 2)) < 15)) {
