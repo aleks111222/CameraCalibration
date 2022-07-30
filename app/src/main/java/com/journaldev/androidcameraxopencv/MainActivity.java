@@ -38,6 +38,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.pow;
 import static java.lang.Math.sin;
 import static java.lang.Math.sqrt;
+import static java.lang.Math.tan;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -708,7 +709,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             double theta = linesMat.get(i, 0)[1];
             isRedundant = false;
             for (Pair l : lines) {
-                if (abs((double) l.getL() - rho) < 50 && abs((double) l.getR() * 180 / CV_PI - theta * 180 / CV_PI) < 10) {
+                if (abs((double) l.getL() - rho) < 50 && abs((double) l.getR() * 180 / CV_PI - theta * 180 / CV_PI) < 15) {
                     isRedundant = true;
                     break;
                 }
@@ -719,33 +720,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
 
-        for (Pair p : lines) {
-            double rho = (double) p.getL();
-            double theta = (double) p.getR();
-            double cosTheta = cos(theta);
-            double sinTheta = sin(theta);
-            double x0 = cosTheta * rho;
-            double y0 = sinTheta * rho;
-            Point P1 = new Point(x0 + 10000 * (-sinTheta), y0 + 10000 * cosTheta);
-            Point P2 = new Point(x0 - 10000 * (-sinTheta), y0 - 10000 * cosTheta);
-            line(matColor, P1, P2, COLOR_RED, 2);
-        }
+//        for (Pair p : lines) {
+//            double rho = (double) p.getL();
+//            double theta = (double) p.getR();
+//            double cosTheta = cos(theta);
+//            double sinTheta = sin(theta);
+//            double x0 = cosTheta * rho;
+//            double y0 = sinTheta * rho;
+//            Point P1 = new Point(x0 + 10000 * (-sinTheta), y0 + 10000 * cosTheta);
+//            Point P2 = new Point(x0 - 10000 * (-sinTheta), y0 - 10000 * cosTheta);
+//            line(matColor, P1, P2, COLOR_RED, 2);
+//        }
 
         List<Point> intersectionPoints = new ArrayList<>();
         if (lines.size() > 1) {
             for (int i = 0; i < lines.size(); i++) {
                 double rho1 = lines.get(i).getL();
                 double theta1 = lines.get(i).getR();
+                double cost1 = cos(theta1);
+                double sint1 = sin(theta1);
                 for (int j = i + 1; j < lines.size(); j++) {
                     double rho2 = lines.get(j).getL();
                     double theta2 = lines.get(j).getR();
-
+                    double cost2 = cos(theta2);
+                    double sint2 = sin(theta2);
+                    double d = cost1 * sint2 - sint1 * cost2;
                     if (abs(theta1 - theta2) > 0.083 * CV_PI) { // 15 degrees
-                        double a1 = 1 / atan(theta1);
-                        double a2 = 1 / atan(theta2);
-
-                        double xIntersection = (rho2 - rho1) / (a1 - a2);
-                        double yIntersection = (a1 * rho2 - a2 * rho1) / (a1 - a2);
+                        double xIntersection = (sint2 * rho1 - sint1 * rho2) / d;
+                        double yIntersection = (-cost2 * rho1 + cost1 * rho2) / d;
 
                         intersectionPoints.add(new Point(xIntersection, yIntersection));
                     }
@@ -753,7 +755,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
 
-        Log.d("Debug", "" + intersectionPoints.size());
+//        Log.d("Debug", "" + intersectionPoints.size());
+
+        for (Point p : intersectionPoints) {
+            drawMarker(matColor, p, COLOR_RED, 1, 2, 2, 1);
+        }
 
 //        for(int index = 0; index < corners.toList().size() - 1; index++) {
 //            if(!(sqrt(pow(corners.toArray()[index].x - corners.toArray()[index + 1].x, 2) + pow(corners.toArray()[index].y - corners.toArray()[index + 1].y, 2)) < 15)) {
