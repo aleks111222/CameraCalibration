@@ -1,6 +1,5 @@
 package com.journaldev.androidcameraxopencv;
 
-import static org.opencv.core.Core.FONT_HERSHEY_SIMPLEX;
 import static org.opencv.core.Core.NORM_L2;
 import static org.opencv.core.Core.NORM_MINMAX;
 import static org.opencv.core.Core.divide;
@@ -19,6 +18,7 @@ import static org.opencv.core.Mat.zeros;
 import static org.opencv.core.TermCriteria.COUNT;
 import static org.opencv.core.TermCriteria.EPS;
 import static org.opencv.core.TermCriteria.MAX_ITER;
+import static org.opencv.features2d.Features2d.drawKeypoints;
 import static org.opencv.imgproc.Imgproc.CHAIN_APPROX_SIMPLE;
 import static org.opencv.imgproc.Imgproc.COLOR_BGR2GRAY;
 import static org.opencv.imgproc.Imgproc.RETR_LIST;
@@ -83,8 +83,10 @@ import org.opencv.android.Utils;
 import org.opencv.calib3d.Calib3d;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
+import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDouble;
+import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.MatOfPoint3f;
@@ -94,6 +96,8 @@ import org.opencv.core.Rect;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
 import org.opencv.core.TermCriteria;
+import org.opencv.features2d.SimpleBlobDetector;
+import org.opencv.features2d.SimpleBlobDetector_Params;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.imgproc.Moments;
 
@@ -620,16 +624,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         maskMatrix = zeros(new org.opencv.core.Size(matGrey.width() + 2, matGrey.height() + 2), CV_8U);
         floodFill(matGrey, maskMatrix, new Point(0,0), new Scalar(255, 255));
-        
 
-        for (MatOfPoint contour : contours) {
-            Moments moments = moments(contour);
-            double centreX = moments.m10 / (moments.m00 + 0.000001);
-            double centreY = moments.m01 / (moments.m00 + 0.000001);
-            circle(matColor, new Point(centreX, centreY), 5, COLOR_RED, -1);
+        SimpleBlobDetector_Params blobParams = new SimpleBlobDetector_Params();
+
+        blobParams.set_minThreshold(8);
+        blobParams.set_maxThreshold(255);
+        blobParams.set_filterByArea(true);
+        blobParams.set_minArea(64);
+        blobParams.set_maxArea(2500);
+        blobParams.set_filterByCircularity(true);
+        blobParams.set_minCircularity((float) 0.1);
+        blobParams.set_filterByConvexity(true);
+        blobParams.set_minConvexity((float) 0.87);
+        blobParams.set_filterByInertia(true);
+        blobParams.set_minInertiaRatio((float) 0.01);
+
+        SimpleBlobDetector blobDetector = SimpleBlobDetector.create(blobParams);
+
+        MatOfKeyPoint matOfKeyPoint = new MatOfKeyPoint();
+        blobDetector.detect(matGrey, matOfKeyPoint);
+
+        for (KeyPoint keyPoint : matOfKeyPoint.toArray()) {
+            drawMarker(matColor, keyPoint.pt, COLOR_RED, 1, 2, 2, 1);
         }
 
-        return matGrey;
+        return matColor;
     }
 
     private Mat getChessboardCorners(Bitmap bitmap) {
