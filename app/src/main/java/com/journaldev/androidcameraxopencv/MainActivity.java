@@ -696,30 +696,41 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         Mat linesMat = new Mat();
-        List<Pair<Point, Point>> lines = new ArrayList<>();
+        List<Pair<Double, Double>> lines = new ArrayList<>();
 
 //        HoughLinesP(matGrey, linesMat, 1, PI / 180, 100, 100,80);
 
         HoughLines(matGrey, linesMat,1,CV_PI / 180,120);
 
+        boolean isRedundant;
         for(int i = 0; i < linesMat.rows(); i++) {
             double rho = linesMat.get(i, 0)[0];
             double theta = linesMat.get(i, 0)[1];
+            isRedundant = false;
+            for (Pair l : lines) {
+                if (abs((double) l.getL() - rho) < 50 && abs((double) l.getR() * 180 / CV_PI - theta * 180 / CV_PI) < 10) {
+                    isRedundant = true;
+                    break;
+                }
+            }
+            if (!isRedundant && (abs(angle - theta * 180 / CV_PI) < 5 || abs(angle + 90 - theta * 180 / CV_PI) < 5
+            ||  abs(angle + 180 - theta * 180 / CV_PI) < 3)) {
+                lines.add(new Pair<>(rho, theta));
+            }
+        }
+
+        Log.d("Debug", "" + lines.size());
+
+        for (Pair p : lines) {
+            double rho = (double) p.getL();
+            double theta = (double) p.getR();
             double cosTheta = cos(theta);
             double sinTheta = sin(theta);
             double x0 = cosTheta * rho;
             double y0 = sinTheta * rho;
             Point P1 = new Point(x0 + 10000 * (-sinTheta), y0 + 10000 * cosTheta);
             Point P2 = new Point(x0 - 10000 * (-sinTheta), y0 - 10000 * cosTheta);
-            if (abs(angle - theta * 180 / CV_PI) < 5 || abs(angle + 90 - theta * 180 / CV_PI) < 5
-            ||  abs(angle + 180 - theta * 180 / CV_PI) < 3)
-                lines.add(new Pair<>(P1, P2));
-        }
-
-        Log.d("Debug", "" + lines.size());
-
-        for (Pair p : lines) {
-            line(matColor, (Point) p.getL(), (Point) p.getR(), COLOR_RED, 2);
+            line(matColor, P1, P2, COLOR_RED, 2);
         }
 
         List<Point> intersectionPoints = new ArrayList<>();
