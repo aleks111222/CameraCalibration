@@ -133,7 +133,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     int TAKE_PHOTO = 0;
     //org.opencv.core.Size MAX_CHESSBOARD_SIZE = new org.opencv.core.Size(9,6);
     org.opencv.core.Size chessboardSize = new org.opencv.core.Size(10,8);
-    org.opencv.core.Size circleGridSize = new org.opencv.core.Size(4,11);
+    org.opencv.core.Size circleGridSize = new org.opencv.core.Size(6,8);
+    boolean CAN_TAKE_PHOTO = false;
 
     String currentImageProcessing = "ASSYMETRIC_CIRCLES";
 
@@ -204,7 +205,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         parent.addView(textureView, 0);
 
                         textureView.setSurfaceTexture(output.getSurfaceTexture());
-                        //updateTransform();
+//                        updateTransform();
                     }
                 });
 
@@ -238,7 +239,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         }
                     });*/
                 }
-                if(currentImageProcessing.equals("ASSYMETRIC_CIRCLES") && NUMBER_OF_CCTAG_IMAGE_POINTS == 47) {
+                if(currentImageProcessing.equals("ASSYMETRIC_CIRCLES") && CAN_TAKE_PHOTO) {
                     imgCapture.takePicture(new ImageCapture.OnImageCapturedListener() {
                         @Override
                         public void onCaptureSuccess(ImageProxy image, int rotationDegrees) {
@@ -323,15 +324,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 circle(matColor, new Point(imagePoint.x, imagePoint.y), 3, COLOR_RED, -1);
                             }*/
                         } else if (currentImageProcessing.equals("ASSYMETRIC_CIRCLES")) {
-                            matColor = getAssymetricCircleCenters(bitmap);
-//                            Mat centers = new Mat();
-//                            centers = getAssymetricCircleCenters(bitmap);
-//                            if(centers.size().width * centers.size().height == circleGridSize.width * circleGridSize.height) {
-//                                drawMarker(matColor, new Point(centers.get(0, 0)[0], centers.get(0, 0)[1]), COLOR_RED, 1, 10, 5, 1);
-//                                drawMarker(matColor, new Point(centers.get((int) circleGridSize.width - 1, 0)[0], centers.get((int) circleGridSize.width - 1, 0)[1]), COLOR_BLUE, 1, 10, 5, 1);
-//                                drawMarker(matColor, new Point(centers.get((int) (circleGridSize.width * (circleGridSize.height - 1)), 0)[0], centers.get((int) (circleGridSize.width * (circleGridSize.height - 1)), 0)[1]), COLOR_GREEN, 1, 10, 5, 1);
-//                                drawMarker(matColor, new Point(centers.get((int) (circleGridSize.width * (circleGridSize.height) - 1), 0)[0], centers.get((int) (circleGridSize.width * (circleGridSize.height) - 1), 0)[1]), COLOR_YELLOW, 1, 10, 5, 1);
-//                            }
+                            Mat centerMatrix = getAssymetricCircleCenters(bitmap);
+                            for (int i = 0; i < centerMatrix.rows(); i++) {
+                                for (int j = 0; j < centerMatrix.cols(); j++) {
+                                    if (!(centerMatrix.get(i, j)[0] == 0 && centerMatrix.get(i, j)[1] == 0)) {
+                                        drawMarker(matColor, new Point(centerMatrix.get(i, j)), COLOR_RED, 1, 2, 2, 1);
+                                        putText(matColor, String.valueOf("(" + i + ", " + j + ")"), new Point(centerMatrix.get(i, j)), FONT_HERSHEY_SIMPLEX, 0.5, COLOR_RED);
+                                    }
+                                }
+                            }
                         }
 //---------------------------------------------------------------------------
 
@@ -644,11 +645,60 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         MatOfKeyPoint matOfKeyPoint = new MatOfKeyPoint();
         blobDetector.detect(matGrey, matOfKeyPoint);
 
-        for (KeyPoint keyPoint : matOfKeyPoint.toArray()) {
-            drawMarker(matColor, keyPoint.pt, COLOR_RED, 1, 2, 2, 1);
+        List<KeyPoint> orderedPoints = matOfKeyPoint.toList();
+
+        MatOfPoint2f bestContour2f = new MatOfPoint2f(bestContour.toArray());
+        RotatedRect rotatedRectangle = minAreaRect(bestContour2f);
+
+        double angle = rotatedRectangle.angle;
+
+        if (rotatedRectangle.size.width < rotatedRectangle.size.height) {
+            angle -= 90;
         }
 
-        return matColor;
+        Mat chessboardRotationMatrix = getRotationMatrix2D(rotatedRectangle.center, angle, 1);
+
+        putText(matColor, "angle = " + angle, new Point(200,200), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
+
+        Collections.sort(orderedPoints, new Comparator<KeyPoint>() {
+            public int compare(KeyPoint x1, KeyPoint x2) {
+                double x1Prime = chessboardRotationMatrix.get(0,0)[0] * x1.pt.x + chessboardRotationMatrix.get(0,1)[0] * x1.pt.y + chessboardRotationMatrix.get(0,2)[0];
+                double y1Prime = chessboardRotationMatrix.get(1,0)[0] * x1.pt.x + chessboardRotationMatrix.get(1,1)[0] * x1.pt.y + chessboardRotationMatrix.get(1,2)[0];
+                double x2Prime = chessboardRotationMatrix.get(0,0)[0] * x2.pt.x + chessboardRotationMatrix.get(0,1)[0] * x2.pt.y + chessboardRotationMatrix.get(0,2)[0];
+                double y2Prime = chessboardRotationMatrix.get(1,0)[0] * x2.pt.x + chessboardRotationMatrix.get(1,1)[0] * x2.pt.y + chessboardRotationMatrix.get(1,2)[0];
+                return Double.compare(100 * y1Prime + 10 * x1Prime, 100 * y2Prime + 10 * x2Prime);
+            }
+        });
+
+        Mat cornerMatrix = zeros(chessboardSize, CV_64FC2);
+        if(orderedPoints.size() <= circleGridSize.width * circleGridSize.height && orderedPoints.size() > circleGridSize.width * circleGridSize.height / 4) {
+            CAN_TAKE_PHOTO = true;
+
+            int currentRow = 0;
+            int currentColumn = 0;
+            double currentY = chessboardRotationMatrix.get(1, 0)[0] * orderedPoints.get(0).pt.x + chessboardRotationMatrix.get(1, 1)[0] * orderedPoints.get(0).pt.y + chessboardRotationMatrix.get(1, 2)[0];;
+            for (KeyPoint corner : orderedPoints) {
+                double yPrime = chessboardRotationMatrix.get(1, 0)[0] * corner.pt.x + chessboardRotationMatrix.get(1, 1)[0] * corner.pt.y + chessboardRotationMatrix.get(1, 2)[0];
+                if(abs(yPrime - currentY) > 20) {
+                    currentRow++;
+                    currentColumn = 0;
+                }
+                cornerMatrix.put(currentRow, currentColumn, corner.pt.x, corner.pt.y);
+                currentColumn++;
+                currentY = yPrime;
+            }
+        } else {
+            CAN_TAKE_PHOTO = false;
+        }
+
+        Log.d("Debug", "" + CAN_TAKE_PHOTO);
+
+//        for (KeyPoint keyPoint : orderedPoints) {
+//            drawMarker(matColor, keyPoint.pt, COLOR_RED, 1, 2, 2, 1);
+//            putText(matColor, String.valueOf(orderedPoints.indexOf(keyPoint)), keyPoint.pt, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+//        }
+
+        return cornerMatrix;
     }
 
     private Mat getChessboardCorners(Bitmap bitmap) {
@@ -828,7 +878,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //            }
 //        }
 
-//        putText(matColor, "angle = " + angle, new Point(200,200), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
+        putText(matColor, "angle = " + angle, new Point(200,200), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
         Mat chessboardRotationMatrix = getRotationMatrix2D(rotatedRectangle.center, angle, 1);
 
         Collections.sort(orderedPoints, new Comparator<Point>() {
@@ -858,10 +908,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
 
-        for(Point corner : orderedPoints) {
-            drawMarker(matColor, corner, COLOR_RED, 1, 2, 2, 1);
-            putText(matColor, String.valueOf(orderedPoints.indexOf(corner)), corner, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-        }
+//        for(Point corner : orderedPoints) {
+//            drawMarker(matColor, corner, COLOR_RED, 1, 2, 2, 1);
+//            putText(matColor, String.valueOf(orderedPoints.indexOf(corner)), corner, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+//        }
 
         return matColor;
     }
@@ -1074,22 +1124,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         int rotationDgr;
         int rotation = (int) textureView.getRotation();
 
-        switch (rotation) {
-            case Surface.ROTATION_0:
-                rotationDgr = 0;
-                break;
-            case Surface.ROTATION_90:
-                rotationDgr = 90;
-                break;
-            case Surface.ROTATION_180:
-                rotationDgr = 180;
-                break;
-            case Surface.ROTATION_270:
-                rotationDgr = 270;
-                break;
-            default:
-                return;
-        }
+        Log.d("Debug", "" + rotation);
+
+//        switch (rotation) {
+//            case Surface.ROTATION_0:
+//                rotationDgr = 0;
+//                break;
+//            case Surface.ROTATION_90:
+//                rotationDgr = 90;
+//                break;
+//            case Surface.ROTATION_180:
+//                rotationDgr = 180;
+//                break;
+//            case Surface.ROTATION_270:
+//                rotationDgr = 270;
+//                break;
+//            default:
+//                return;
+//        }
 
 //        mx.postRotate((float) rotationDgr, cX, cY);
 //        textureView.setTransform(mx);
