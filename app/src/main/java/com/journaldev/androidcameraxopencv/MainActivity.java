@@ -706,27 +706,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         Mat cornerMatrixDoneWell = zeros(circleGridSize, CV_64FC2);
 
-        for (int i = 0; i < cornerMatrix.rows(); i++) {
-            Point predictionPoint = new Point(cornerMatrix.get(i, 0)[0] + smallestDeltaX, cornerMatrix.get(i, 0)[1]);
-            for (int j = 0; j < cornerMatrix.cols(); j++) {
-                if (j == 0) {
-                    cornerMatrixDoneWell.put(i, j, cornerMatrix.get(i, j));
-                } else if (abs(cornerMatrix.get(i, j)[0] - predictionPoint.x) >= smallestDeltaX * 1.33 || abs(cornerMatrix.get(i, j)[1] - predictionPoint.y) >= smallestDeltaY * 1.33) {
-                    predictionPoint = new Point(predictionPoint.x + smallestDeltaX, predictionPoint.y);
-                    Log.d("Debug", "dsdds");
-                } else {
-                    cornerMatrixDoneWell.put(i, j, cornerMatrix.get(i, j));
-                    predictionPoint = new Point(cornerMatrix.get(i, j)[0] + smallestDeltaX, cornerMatrix.get(i, j)[1]);
-                }
-            }
-        }
+//        for (int i = 0; i < cornerMatrix.rows(); i++) {
+//            Point predictionPoint = new Point(cornerMatrix.get(i, 0)[0] + smallestDeltaX, cornerMatrix.get(i, 0)[1]);
+//            for (int j = 0; j < cornerMatrix.cols(); j++) {
+//                if (j == 0) {
+//                    cornerMatrixDoneWell.put(i, j, cornerMatrix.get(i, j));
+//                } else if (abs(cornerMatrix.get(i, j)[0] - predictionPoint.x) >= smallestDeltaX * 1.33 || abs(cornerMatrix.get(i, j)[1] - predictionPoint.y) >= smallestDeltaY * 1.33) {
+//                    predictionPoint = new Point(predictionPoint.x + smallestDeltaX, predictionPoint.y);
+//                    Log.d("Debug", "dsdds");
+//                } else {
+//                    cornerMatrixDoneWell.put(i, j, cornerMatrix.get(i, j));
+//                    predictionPoint = new Point(cornerMatrix.get(i, j)[0] + smallestDeltaX, cornerMatrix.get(i, j)[1]);
+//                }
+//            }
+//        }
 
 //        for (KeyPoint keyPoint : orderedPoints) {
 //            drawMarker(matColor, keyPoint.pt, COLOR_RED, 1, 2, 2, 1);
 //            putText(matColor, String.valueOf(orderedPoints.indexOf(keyPoint)), keyPoint.pt, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
 //        }
 
-        return cornerMatrixDoneWell;
+        return cornerMatrix;
     }
 
     private Mat getChessboardCorners(Bitmap bitmap) {
