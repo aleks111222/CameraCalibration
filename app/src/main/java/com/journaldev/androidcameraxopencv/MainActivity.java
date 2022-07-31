@@ -329,7 +329,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 for (int j = 0; j < centerMatrix.cols(); j++) {
                                     if (!(centerMatrix.get(i, j)[0] == 0 && centerMatrix.get(i, j)[1] == 0)) {
                                         drawMarker(matColor, new Point(centerMatrix.get(i, j)), COLOR_RED, 1, 2, 2, 1);
-                                        putText(matColor, String.valueOf("(" + i + ", " + j + ")"), new Point(centerMatrix.get(i, j)), FONT_HERSHEY_SIMPLEX, 0.5, COLOR_RED);
+                                        putText(matColor, "(" + i + ", " + j + ")", new Point(centerMatrix.get(i, j)), FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
                                     }
                                 }
                             }
@@ -670,18 +670,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
 
-        Mat cornerMatrix = zeros(chessboardSize, CV_64FC2);
+        Mat cornerMatrix = zeros(circleGridSize, CV_64FC2);
+
+        double smallestDeltaX = 9999;
+        double smallestDeltaY = 9999;
+
         if(orderedPoints.size() <= circleGridSize.width * circleGridSize.height && orderedPoints.size() > circleGridSize.width * circleGridSize.height / 4) {
             CAN_TAKE_PHOTO = true;
 
             int currentRow = 0;
             int currentColumn = 0;
-            double currentY = chessboardRotationMatrix.get(1, 0)[0] * orderedPoints.get(0).pt.x + chessboardRotationMatrix.get(1, 1)[0] * orderedPoints.get(0).pt.y + chessboardRotationMatrix.get(1, 2)[0];;
+            double currentY = chessboardRotationMatrix.get(1, 0)[0] * orderedPoints.get(0).pt.x + chessboardRotationMatrix.get(1, 1)[0] * orderedPoints.get(0).pt.y + chessboardRotationMatrix.get(1, 2)[0];
+            double currentX = chessboardRotationMatrix.get(0, 0)[0] * orderedPoints.get(0).pt.x + chessboardRotationMatrix.get(0, 1)[0] * orderedPoints.get(0).pt.y + chessboardRotationMatrix.get(0, 2)[0];
+            double realX = orderedPoints.get(0).pt.x;
+            double realY = orderedPoints.get(0).pt.y;
             for (KeyPoint corner : orderedPoints) {
                 double yPrime = chessboardRotationMatrix.get(1, 0)[0] * corner.pt.x + chessboardRotationMatrix.get(1, 1)[0] * corner.pt.y + chessboardRotationMatrix.get(1, 2)[0];
-                if(abs(yPrime - currentY) > 20) {
+                double XPrime = chessboardRotationMatrix.get(0, 0)[0] * corner.pt.x + chessboardRotationMatrix.get(0, 1)[0] * corner.pt.y + chessboardRotationMatrix.get(0, 2)[0];
+                if(abs(yPrime - currentY) > 15) {
+                    if (abs(corner.pt.y - realY) < smallestDeltaY) {
+                        smallestDeltaY = abs(corner.pt.y - realY);
+                    }
                     currentRow++;
                     currentColumn = 0;
+                } else if (abs(XPrime - currentX) > 15 && abs(corner.pt.x - realX) < smallestDeltaX) {
+                    smallestDeltaX = abs(corner.pt.x - realX);
                 }
                 cornerMatrix.put(currentRow, currentColumn, corner.pt.x, corner.pt.y);
                 currentColumn++;
@@ -691,14 +704,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             CAN_TAKE_PHOTO = false;
         }
 
-        Log.d("Debug", "" + CAN_TAKE_PHOTO);
+        Mat cornerMatrixDoneWell = zeros(circleGridSize, CV_64FC2);
+
+        for (int i = 0; i < cornerMatrix.rows(); i++) {
+            Point predictionPoint = new Point(cornerMatrix.get(i, 0)[0] + smallestDeltaX, cornerMatrix.get(i, 0)[1]);
+            for (int j = 0; j < cornerMatrix.cols(); j++) {
+                if (j == 0) {
+                    cornerMatrixDoneWell.put(i, j, cornerMatrix.get(i, j));
+                } else if (abs(cornerMatrix.get(i, j)[0] - predictionPoint.x) >= smallestDeltaX * 1.33 || abs(cornerMatrix.get(i, j)[1] - predictionPoint.y) >= smallestDeltaY * 1.33) {
+                    predictionPoint = new Point(predictionPoint.x + smallestDeltaX, predictionPoint.y);
+                    Log.d("Debug", "dsdds");
+                } else {
+                    cornerMatrixDoneWell.put(i, j, cornerMatrix.get(i, j));
+                    predictionPoint = new Point(cornerMatrix.get(i, j)[0] + smallestDeltaX, cornerMatrix.get(i, j)[1]);
+                }
+            }
+        }
 
 //        for (KeyPoint keyPoint : orderedPoints) {
 //            drawMarker(matColor, keyPoint.pt, COLOR_RED, 1, 2, 2, 1);
 //            putText(matColor, String.valueOf(orderedPoints.indexOf(keyPoint)), keyPoint.pt, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
 //        }
 
-        return cornerMatrix;
+        return cornerMatrixDoneWell;
     }
 
     private Mat getChessboardCorners(Bitmap bitmap) {
