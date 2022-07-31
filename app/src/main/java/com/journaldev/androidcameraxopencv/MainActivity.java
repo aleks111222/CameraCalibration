@@ -707,27 +707,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         Mat cornerMatrixDoneWell = zeros(circleGridSize, CV_64FC2);
 
-        for (int i = 0; i < 1; i++) {
-            Point predictionPoint = new Point(cornerMatrix.get(i, 0)[0] + smallestDeltaX, cornerMatrix.get(i, 0)[1]);
-            for (int j = 0; j < cornerMatrix.cols(); j++) {
-                drawMarker(matColor, predictionPoint, COLOR_YELLOW, 2, 6, 2, 1);
-                drawMarker(matColor, new Point(cornerMatrix.get(i, j)), COLOR_RED, 1, 4, 2, 1);
-                if (cornerMatrix.get(i, j)[0] == 0 || cornerMatrix.get(i, j)[1] == 0){
-                    continue;
-                }
-                if (j == 0) {
-                    cornerMatrixDoneWell.put(i, j, cornerMatrix.get(i, j));
-                } else if (abs(cornerMatrix.get(i, j)[0] - predictionPoint.x) >= smallestDeltaX * 1.33 || abs(cornerMatrix.get(i, j)[1] - predictionPoint.y) >= smallestDeltaY * 1.33) {
-                    predictionPoint = new Point(predictionPoint.x + smallestDeltaX, predictionPoint.y);
-                    cornerMatrixDoneWell.put(i, j, 0, 0);
-                    j--;
-                    Log.d("Debug", "sdsd");
-                } else {
-                    cornerMatrixDoneWell.put(i, j, cornerMatrix.get(i, j));
-                    predictionPoint = new Point(cornerMatrix.get(i, j)[0] + smallestDeltaX, cornerMatrix.get(i, j)[1]);
-                }
-            }
-        }
+//        for (int i = 0; i < 1; i++) {
+//            Point predictionPoint = new Point(cornerMatrix.get(i, 0)[0] + smallestDeltaX, cornerMatrix.get(i, 0)[1]);
+//            int skipped = 0;
+//            for (int j = 0; j < cornerMatrix.cols(); j++) {
+//                if (j == 0) {
+//                    cornerMatrixDoneWell.put(i, j, cornerMatrix.get(i, j));
+//                    putText(matColor, String.valueOf(j), new Point(cornerMatrix.get(i, j)), FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+//                } else if (abs(cornerMatrix.get(i, j - skipped)[0] - predictionPoint.x) >= smallestDeltaX * 1.33 || abs(cornerMatrix.get(i, j - skipped)[1] - predictionPoint.y) >= smallestDeltaY * 1.33) {
+//                    predictionPoint = new Point(predictionPoint.x + smallestDeltaX, predictionPoint.y);
+//                    cornerMatrixDoneWell.put(i, j, 0, 0);
+//                    skipped++;
+//                    Log.d("Debug", "sdsd");
+//                } else {
+//                    cornerMatrixDoneWell.put(i, j, cornerMatrix.get(i, j - skipped));
+//                    predictionPoint = new Point(cornerMatrix.get(i, j - skipped)[0] + smallestDeltaX, cornerMatrix.get(i, j - skipped)[1]);
+//                    putText(matColor, String.valueOf(j), new Point(cornerMatrix.get(i, j - skipped)), FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+//                }
+//            }
+//        }
 
 //        for (KeyPoint keyPoint : orderedPoints) {
 //            drawMarker(matColor, keyPoint.pt, COLOR_RED, 1, 2, 2, 1);
