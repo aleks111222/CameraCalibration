@@ -324,15 +324,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 circle(matColor, new Point(imagePoint.x, imagePoint.y), 3, COLOR_RED, -1);
                             }*/
                         } else if (currentImageProcessing.equals("ASSYMETRIC_CIRCLES")) {
-                            Mat centerMatrix = getAssymetricCircleCenters(bitmap);
-                            for (int i = 0; i < centerMatrix.rows(); i++) {
-                                for (int j = 0; j < centerMatrix.cols(); j++) {
-                                    if (!(centerMatrix.get(i, j)[0] == 0 && centerMatrix.get(i, j)[1] == 0)) {
-                                        drawMarker(matColor, new Point(centerMatrix.get(i, j)), COLOR_RED, 1, 2, 2, 1);
-                                        putText(matColor, "(" + i + ", " + j + ")", new Point(centerMatrix.get(i, j)), FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-                                    }
-                                }
-                            }
+                            matColor = getAssymetricCircleCenters(bitmap);
+//                            Mat centerMatrix = getAssymetricCircleCenters(bitmap);
+//                            for (int i = 0; i < centerMatrix.rows(); i++) {
+//                                for (int j = 0; j < centerMatrix.cols(); j++) {
+//                                    if (!(centerMatrix.get(i, j)[0] == 0 && centerMatrix.get(i, j)[1] == 0)) {
+//                                        drawMarker(matColor, new Point(centerMatrix.get(i, j)), COLOR_RED, 1, 2, 2, 1);
+//                                        putText(matColor, "(" + i + ", " + j + ")", new Point(centerMatrix.get(i, j)), FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+//                                    }
+//                                }
+//                            }
                         }
 //---------------------------------------------------------------------------
 
@@ -631,14 +632,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         blobParams.set_minThreshold(8);
         blobParams.set_maxThreshold(255);
         blobParams.set_filterByArea(true);
-        blobParams.set_minArea(64);
+        blobParams.set_minArea(32);
         blobParams.set_maxArea(2500);
         blobParams.set_filterByCircularity(true);
         blobParams.set_minCircularity((float) 0.1);
         blobParams.set_filterByConvexity(true);
         blobParams.set_minConvexity((float) 0.87);
-        blobParams.set_filterByInertia(true);
-        blobParams.set_minInertiaRatio((float) 0.01);
+        blobParams.set_filterByInertia(false);
+//        blobParams.set_minInertiaRatio((float) 0.01);
 
         SimpleBlobDetector blobDetector = SimpleBlobDetector.create(blobParams);
 
@@ -706,27 +707,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         Mat cornerMatrixDoneWell = zeros(circleGridSize, CV_64FC2);
 
-//        for (int i = 0; i < cornerMatrix.rows(); i++) {
-//            Point predictionPoint = new Point(cornerMatrix.get(i, 0)[0] + smallestDeltaX, cornerMatrix.get(i, 0)[1]);
-//            for (int j = 0; j < cornerMatrix.cols(); j++) {
-//                if (j == 0) {
-//                    cornerMatrixDoneWell.put(i, j, cornerMatrix.get(i, j));
-//                } else if (abs(cornerMatrix.get(i, j)[0] - predictionPoint.x) >= smallestDeltaX * 1.33 || abs(cornerMatrix.get(i, j)[1] - predictionPoint.y) >= smallestDeltaY * 1.33) {
-//                    predictionPoint = new Point(predictionPoint.x + smallestDeltaX, predictionPoint.y);
-//                    Log.d("Debug", "dsdds");
-//                } else {
-//                    cornerMatrixDoneWell.put(i, j, cornerMatrix.get(i, j));
-//                    predictionPoint = new Point(cornerMatrix.get(i, j)[0] + smallestDeltaX, cornerMatrix.get(i, j)[1]);
-//                }
-//            }
-//        }
+        for (int i = 0; i < 1; i++) {
+            Point predictionPoint = new Point(cornerMatrix.get(i, 0)[0] + smallestDeltaX, cornerMatrix.get(i, 0)[1]);
+            for (int j = 0; j < cornerMatrix.cols(); j++) {
+                drawMarker(matColor, predictionPoint, COLOR_YELLOW, 2, 6, 2, 1);
+                drawMarker(matColor, new Point(cornerMatrix.get(i, j)), COLOR_RED, 1, 4, 2, 1);
+                if (cornerMatrix.get(i, j)[0] == 0 || cornerMatrix.get(i, j)[1] == 0){
+                    continue;
+                }
+                if (j == 0) {
+                    cornerMatrixDoneWell.put(i, j, cornerMatrix.get(i, j));
+                } else if (abs(cornerMatrix.get(i, j)[0] - predictionPoint.x) >= smallestDeltaX * 1.33 || abs(cornerMatrix.get(i, j)[1] - predictionPoint.y) >= smallestDeltaY * 1.33) {
+                    predictionPoint = new Point(predictionPoint.x + smallestDeltaX, predictionPoint.y);
+                    cornerMatrixDoneWell.put(i, j, 0, 0);
+                    j--;
+                    Log.d("Debug", "sdsd");
+                } else {
+                    cornerMatrixDoneWell.put(i, j, cornerMatrix.get(i, j));
+                    predictionPoint = new Point(cornerMatrix.get(i, j)[0] + smallestDeltaX, cornerMatrix.get(i, j)[1]);
+                }
+            }
+        }
 
 //        for (KeyPoint keyPoint : orderedPoints) {
 //            drawMarker(matColor, keyPoint.pt, COLOR_RED, 1, 2, 2, 1);
 //            putText(matColor, String.valueOf(orderedPoints.indexOf(keyPoint)), keyPoint.pt, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
 //        }
 
-        return cornerMatrix;
+        return matColor;
     }
 
     private Mat getChessboardCorners(Bitmap bitmap) {
@@ -822,7 +830,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         double angle = rotatedRectangle.angle;
 
         if (rotatedRectangle.size.width < rotatedRectangle.size.height) {
-            angle += 90;
+            angle -= 90;
         }
 
         Mat linesMat = new Mat();
