@@ -1015,8 +1015,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         List<Double> contourIds = new ArrayList<>();
 
-        drawContours(matColor, contours, -1, COLOR_RED);
-
         for (int i = 0; i < contours.size(); i++) {
 
             List<Double> h = new ArrayList<>();
@@ -1027,10 +1025,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             depth = 0;
 
-            if (h.get(2) != -1 && h.get(3) == -1) {
+            if (h.get(2) == -1 && h.get(3) != -1) {
 
                 depth++;
-                contourId = h.get(2);
+                contourId = h.get(3);
                 contours.get(i).convertTo(contour2f, CV_32F);
 
                 if(contour2f.toList().size() > 4) {
@@ -1038,18 +1036,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     elli = fitEllipse(contour2f);
                     meanCenter = elli.center;
 
-//                    ellipse(matColor, elli, COLOR_RED, 4);
+                    ellipse(matColor, elli, COLOR_RED, 4);
 
-
-                    while(hierarchy.get(0, contourId.intValue())[2] != -1) {
+                    while(hierarchy.get(0, contourId.intValue())[3] != -1) {
 
                         contourIds.add(contourId);
 
                         depth++;
-                        contourId = hierarchy.get(0, contourId.intValue())[2];
+                        contourId = hierarchy.get(0, contourId.intValue())[3];
                         contours.get(contourId.intValue()).convertTo(contour2f, CV_32F);
 
-                        if(hierarchy.get(0, contourId.intValue())[2] == -1) {
+                        if(hierarchy.get(0, contourId.intValue())[3] == -1) {
                             contourIds.add(contourId);
                         }
 
@@ -1059,11 +1056,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                             Point[] contour2fArray = contour2f.toArray();
                             //Log.d("Debug", String.valueOf(elli.angle));
-                            if(outerRingOfPoints.isEmpty()) {
+                            if(depth == 5) {
                                 for (int j = 0; j < 8; j++) {
                                     Point ringPoint = contour2fArray[j * (contour2f.toList().size() / 8)];
                                     //PointF ringPointF = new PointF((float) ringPoint.x, (float) ringPoint.y);
-                                    //circle(matColor, ringPoint, 3, COLOR_RED, -1);
+                                    circle(matColor, ringPoint, 3, COLOR_RED, -1);
                                     outerRingOfPoints.add(ringPoint);
                                 }
                             }
