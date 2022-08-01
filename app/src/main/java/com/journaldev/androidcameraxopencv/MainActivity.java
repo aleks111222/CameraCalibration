@@ -1002,12 +1002,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         int depth;
         Double contourId;
+        Double outerRingId = -1.0;
 
         RotatedRect elli = new RotatedRect();
 
         MatOfPoint2f contour2f = new MatOfPoint2f();
         org.opencv.core.Point meanCenter;
-        int orderId = 0;
+//        int orderId = 0;
 
         List<Point> outerRingOfPoints = new ArrayList<>();
         List<Point> imagePoints = new ArrayList<>();
@@ -1036,9 +1037,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     elli = fitEllipse(contour2f);
                     meanCenter = elli.center;
 
-                    ellipse(matColor, elli, COLOR_RED, 4);
+                    contourIds.add(hierarchy.get(0, contourId.intValue())[2]);
 
-                    while(hierarchy.get(0, contourId.intValue())[3] != -1) {
+//                    ellipse(matColor, elli, COLOR_RED, 4);
+
+                    while(depth != 5 && hierarchy.get(0, contourId.intValue())[3] != -1) {
 
                         contourIds.add(contourId);
 
@@ -1057,10 +1060,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             Point[] contour2fArray = contour2f.toArray();
                             //Log.d("Debug", String.valueOf(elli.angle));
                             if(depth == 5) {
+                                outerRingId = contourId;
+//                                ellipse(matColor, elli, COLOR_RED, 4);
                                 for (int j = 0; j < 8; j++) {
                                     Point ringPoint = contour2fArray[j * (contour2f.toList().size() / 8)];
                                     //PointF ringPointF = new PointF((float) ringPoint.x, (float) ringPoint.y);
-                                    circle(matColor, ringPoint, 3, COLOR_RED, -1);
+//                                    circle(matColor, ringPoint, 3, COLOR_RED, -1);
                                     outerRingOfPoints.add(ringPoint);
                                 }
                             }
@@ -1072,11 +1077,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     //matReference = matColor;
 
                     if(depth == 5) {
-
-                        orderId++;
-                        contours.get(i).convertTo(contour2f, CV_32F);
+                        contours.get(outerRingId.intValue()).convertTo(contour2f, CV_32F);
                         //Log.d("Debug:", String.valueOf(contour2f.size()));
                         elli = fitEllipse(contour2f);
+
+//                        ellipse(matColor, elli, COLOR_RED, 4);
 
                         meanCenter.x = (meanCenter.x + elli.center.x) / 2;
                         meanCenter.y = (meanCenter.y + elli.center.y) / 2;
@@ -1091,11 +1096,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             int additionalPointsAdded = 0;
                             for(Point point : contour2f.toArray()) {
                                 if(abs(dx) < 100 && (dy / abs(dy) == ((point.y - meanCenter.y) / abs(point.y - meanCenter.y))) && abs(point.x - meanCenter.x) < 1) {
-//                                    circle(matColor, point, 3, COLOR_RED, -1);
+                                    circle(matColor, point, 3, COLOR_RED, -1);
                                     imagePoints.add(point);
                                 }
                                 if(dx > 100 && abs(m * (point.x - meanCenter.x) - (point.y - meanCenter.y)) < 1) {
-//                                    circle(matColor, point, 3, COLOR_RED, -1);
+                                    circle(matColor, point, 3, COLOR_RED, -1);
                                     imagePoints.add(point);
                                 }
                             }
@@ -1103,11 +1108,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 contours.get(id.intValue()).convertTo(contourInner2f, CV_32F);
                                 for(Point point : contourInner2f.toArray()) {
                                     if(abs(dx) < 100 && (dy / abs(dy) == ((point.y - meanCenter.y) / abs(point.y - meanCenter.y))) && abs(point.x - meanCenter.x) < 1) {
-//                                        circle(matColor, point, 3, COLOR_RED, -1);
+                                        circle(matColor, point, 3, COLOR_RED, -1);
                                         imagePoints.add(point);
                                     }
                                     if(dx > 100 && abs(m * (point.x - meanCenter.x) - (point.y - meanCenter.y)) < 1) {
-//                                        circle(matColor, point, 3, COLOR_RED, -1);
+                                        circle(matColor, point, 3, COLOR_RED, -1);
                                         imagePoints.add(point);
                                     } /*else if((point.x - meanCenter.x) - abs(dx) < 10) {
                                         imagePoints.add(point);
