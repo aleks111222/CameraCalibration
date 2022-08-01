@@ -954,8 +954,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         NUMBER_OF_CCTAG_IMAGE_POINTS = 0;
 
-        Mat matReference = new Mat();
-
         Mat matColor = new Mat();
         Mat matGrey = new Mat();
         Mat matGreyAdapted = new Mat();
@@ -971,13 +969,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //int s = matGrey.width() / 8;
         //adaptiveThreshold(matGrey, matGreyAdapted, 255, ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, s, 7.0);
 //        org.opencv.imgproc.Imgproc.threshold(matGrey, matGreyAdapted, 125, 255, THRESH_BINARY);
-        threshold(matGrey, matGreyAdapted,127,255, THRESH_BINARY);
+        threshold(matGrey, matGreyAdapted, 127, 255, THRESH_BINARY);
         normalize(matGreyAdapted, matGreyAdapted, 0, 255, NORM_MINMAX);
         findContours(matGreyAdapted, uselessContours, uselessHierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
 
         double maxArea = 0.0;
         MatOfPoint bestContour = new MatOfPoint();
-        for(MatOfPoint contour : uselessContours) {
+        for (MatOfPoint contour : uselessContours) {
             double area = contourArea(contour);
             if (area > 1000.0) {
                 if (area > maxArea) {
@@ -998,7 +996,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Core.bitwise_and(matGreyAdapted, maskMatrix, matGreyAdapted);
 
         maskMatrix = zeros(new org.opencv.core.Size(matGreyAdapted.width() + 2, matGreyAdapted.height() + 2), CV_8U);
-        floodFill(matGreyAdapted, maskMatrix, new Point(0,0), new Scalar(255, 255));
+        floodFill(matGreyAdapted, maskMatrix, new Point(0, 0), new Scalar(255, 255));
 
         findContours(matGreyAdapted, contours, hierarchy, RETR_TREE, CHAIN_APPROX_NONE);
 
@@ -1151,7 +1149,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
 
-        return matGreyAdapted;
+        return matColor;
     }
 
     private void showAcceptedRejectedButton(boolean acceptedRejected) {
