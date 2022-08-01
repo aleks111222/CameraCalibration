@@ -136,7 +136,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     org.opencv.core.Size circleGridSize = new org.opencv.core.Size(6,8);
     boolean CAN_TAKE_PHOTO = false;
 
-    String currentImageProcessing = "ASSYMETRIC_CIRCLES";
+    String currentImageProcessing = "CCTAG";
 
     ImageCapture imageCapture;
     ImageAnalysis imageAnalysis;
@@ -962,21 +962,45 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Mat edges = new Mat();
         List<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
+        Mat uselessHierarchy = new Mat();
+        List<MatOfPoint> uselessContours = new ArrayList<>();
 
         Utils.bitmapToMat(bitmap, matColor);
 
         cvtColor(matColor, matGrey, COLOR_BGR2GRAY);
         //int s = matGrey.width() / 8;
         //adaptiveThreshold(matGrey, matGreyAdapted, 255, ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, s, 7.0);
-        org.opencv.imgproc.Imgproc.threshold(matGrey, matGreyAdapted, 125, 255, THRESH_BINARY_INV);
+//        org.opencv.imgproc.Imgproc.threshold(matGrey, matGreyAdapted, 125, 255, THRESH_BINARY);
+        threshold(matGrey, matGreyAdapted,127,255, THRESH_BINARY);
+        normalize(matGreyAdapted, matGreyAdapted, 0, 255, NORM_MINMAX);
+        findContours(matGreyAdapted, uselessContours, uselessHierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+
+        double maxArea = 0.0;
+        MatOfPoint bestContour = new MatOfPoint();
+        for(MatOfPoint contour : uselessContours) {
+            double area = contourArea(contour);
+            if (area > 1000.0) {
+                if (area > maxArea) {
+                    maxArea = area;
+                    bestContour = contour;
+                }
+            }
+        }
+
+        List<MatOfPoint> bestContourList = new ArrayList<>();
+        bestContourList.add(bestContour);
+
+        Mat maskMatrix = zeros(new org.opencv.core.Size(matGrey.width(), matGrey.height()), CV_8U);
+
+        drawContours(maskMatrix, bestContourList, 0, new Scalar(255.0, 255.0, 255.0, 255.0), -1);
+        drawContours(maskMatrix, bestContourList, 0, new Scalar(0.0, 0.0, 0.0, 0.0), 2);
+
+        Core.bitwise_and(matGreyAdapted, maskMatrix, matGreyAdapted);
+
+        maskMatrix = zeros(new org.opencv.core.Size(matGreyAdapted.width() + 2, matGreyAdapted.height() + 2), CV_8U);
+        floodFill(matGreyAdapted, maskMatrix, new Point(0,0), new Scalar(255, 255));
+
         findContours(matGreyAdapted, contours, hierarchy, RETR_TREE, CHAIN_APPROX_NONE);
-        //Log.d("Debug:", String.valueOf(contours.size()));
-
-        // Draw found contours on input image
-        //drawContours(matColor, contours, -1, COLOR_RED, 5);
-
-        //Utils.matToBitmap(matColor, processedImage)
-        //mImageView2.setImageBitmap(processedImage)
 
         int depth;
         Double contourId;
@@ -992,6 +1016,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         List<Point> imagePointsReduced = new ArrayList<>();
 
         List<Double> contourIds = new ArrayList<>();
+
+        drawContours(matColor, contours, -1, COLOR_RED);
 
         for (int i = 0; i < contours.size(); i++) {
 
@@ -1013,6 +1039,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                     elli = fitEllipse(contour2f);
                     meanCenter = elli.center;
+
+//                    ellipse(matColor, elli, COLOR_RED, 4);
+
 
                     while(hierarchy.get(0, contourId.intValue())[2] != -1) {
 
@@ -1067,11 +1096,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             int additionalPointsAdded = 0;
                             for(Point point : contour2f.toArray()) {
                                 if(abs(dx) < 100 && (dy / abs(dy) == ((point.y - meanCenter.y) / abs(point.y - meanCenter.y))) && abs(point.x - meanCenter.x) < 1) {
-                                    circle(matColor, point, 3, COLOR_RED, -1);
+//                                    circle(matColor, point, 3, COLOR_RED, -1);
                                     imagePoints.add(point);
                                 }
                                 if(dx > 100 && abs(m * (point.x - meanCenter.x) - (point.y - meanCenter.y)) < 1) {
-                                    circle(matColor, point, 3, COLOR_RED, -1);
+//                                    circle(matColor, point, 3, COLOR_RED, -1);
                                     imagePoints.add(point);
                                 }
                             }
@@ -1079,11 +1108,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 contours.get(id.intValue()).convertTo(contourInner2f, CV_32F);
                                 for(Point point : contourInner2f.toArray()) {
                                     if(abs(dx) < 100 && (dy / abs(dy) == ((point.y - meanCenter.y) / abs(point.y - meanCenter.y))) && abs(point.x - meanCenter.x) < 1) {
-                                        circle(matColor, point, 3, COLOR_RED, -1);
+//                                        circle(matColor, point, 3, COLOR_RED, -1);
                                         imagePoints.add(point);
                                     }
                                     if(dx > 100 && abs(m * (point.x - meanCenter.x) - (point.y - meanCenter.y)) < 1) {
-                                        circle(matColor, point, 3, COLOR_RED, -1);
+//                                        circle(matColor, point, 3, COLOR_RED, -1);
                                         imagePoints.add(point);
                                     } /*else if((point.x - meanCenter.x) - abs(dx) < 10) {
                                         imagePoints.add(point);
@@ -1092,21 +1121,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             }
 
                         }
-                        //ellipse(matColor, elli, COLOR_RED, 4);
-
-                        circle(matColor, meanCenter, 3, COLOR_RED, -1);
-                        putText(matColor, String.valueOf(orderId), new org.opencv.core.Point((int) meanCenter.x + 1, (int) meanCenter.y + 1),
-                                FONT_HERSHEY_SIMPLEX, 2, COLOR_BLUE, 3);
+//                        ellipse(matColor, elli, COLOR_RED, 4);
+//
+//                        circle(matColor, meanCenter, 3, COLOR_RED, -1);
+//                        putText(matColor, String.valueOf(orderId), new org.opencv.core.Point((int) meanCenter.x + 1, (int) meanCenter.y + 1),
+//                                FONT_HERSHEY_SIMPLEX, 2, COLOR_BLUE, 3);
 
                         for(int index = 0; index < imagePoints.size() - 1; index++) {
                             if(!(sqrt(pow(imagePoints.get(index).x - imagePoints.get(index + 1).x, 2) + pow(imagePoints.get(index).y - imagePoints.get(index + 1).y, 2)) < 15)) {
                                 imagePointsReduced.add(imagePoints.get(index));
                             }
                         }
-                        putText(matColor, String.valueOf(imagePointsReduced.size()), new org.opencv.core.Point( 100, 100),
-                                FONT_HERSHEY_SIMPLEX, 2, COLOR_BLUE, 3);
+//                        putText(matColor, String.valueOf(imagePointsReduced.size()), new org.opencv.core.Point( 100, 100),
+//                                FONT_HERSHEY_SIMPLEX, 2, COLOR_BLUE, 3);
                         NUMBER_OF_CCTAG_IMAGE_POINTS = imagePointsReduced.size();
-                        Log.d("Debug:", String.valueOf(NUMBER_OF_CCTAG_IMAGE_POINTS));
                         if(NUMBER_OF_CCTAG_IMAGE_POINTS == 47 && TAKE_PHOTO == 1) {
                             File file = new File(getFilesDir(), "Ref" + System.currentTimeMillis() + ".jpg");
                             TAKE_PHOTO = 0;
@@ -1122,9 +1150,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             }
         }
-        matReference = matColor;
 
-        return matReference;
+        return matGreyAdapted;
     }
 
     private void showAcceptedRejectedButton(boolean acceptedRejected) {
