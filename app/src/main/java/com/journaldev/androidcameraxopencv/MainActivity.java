@@ -3,6 +3,7 @@ package com.journaldev.androidcameraxopencv;
 import static org.opencv.core.Core.NORM_L2;
 import static org.opencv.core.Core.NORM_MINMAX;
 import static org.opencv.core.Core.divide;
+import static org.opencv.core.Core.inRange;
 import static org.opencv.core.Core.magnitude;
 import static org.opencv.core.Core.mean;
 import static org.opencv.core.Core.minMaxLoc;
@@ -971,32 +972,37 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        org.opencv.imgproc.Imgproc.threshold(matGrey, matGreyAdapted, 125, 255, THRESH_BINARY);
         threshold(matGrey, matGreyAdapted, 127, 255, THRESH_BINARY);
         normalize(matGreyAdapted, matGreyAdapted, 0, 255, NORM_MINMAX);
-        findContours(matGreyAdapted, uselessContours, uselessHierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+//        findContours(matGreyAdapted, uselessContours, uselessHierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+//
+//        double maxArea = 0.0;
+//        MatOfPoint bestContour = new MatOfPoint();
+//        for (MatOfPoint contour : uselessContours) {
+//            double area = contourArea(contour);
+//            if (area > 1000.0) {
+//                if (area > maxArea) {
+//                    maxArea = area;
+//                    bestContour = contour;
+//                }
+//            }
+//        }
+//
+//        List<MatOfPoint> bestContourList = new ArrayList<>();
+//        bestContourList.add(bestContour);
+//
+//        Mat maskMatrix = zeros(new org.opencv.core.Size(matGrey.width(), matGrey.height()), CV_8U);
+//        if (bestContourList.size() != 0) {
+//            drawContours(maskMatrix, bestContourList, 0, new Scalar(255.0, 255.0, 255.0, 255.0), -1);
+//            drawContours(maskMatrix, bestContourList, 0, new Scalar(0.0, 0.0, 0.0, 0.0), 2);
+//        }
+//        Core.bitwise_and(matGreyAdapted, maskMatrix, matGreyAdapted);
 
-        double maxArea = 0.0;
-        MatOfPoint bestContour = new MatOfPoint();
-        for (MatOfPoint contour : uselessContours) {
-            double area = contourArea(contour);
-            if (area > 1000.0) {
-                if (area > maxArea) {
-                    maxArea = area;
-                    bestContour = contour;
-                }
-            }
-        }
+//        maskMatrix = zeros(new org.opencv.core.Size(matGreyAdapted.width() + 2, matGreyAdapted.height() + 2), CV_8U);
+//        floodFill(matGreyAdapted, maskMatrix, new Point(0, 0), new Scalar(255, 255));
 
-        List<MatOfPoint> bestContourList = new ArrayList<>();
-        bestContourList.add(bestContour);
-
-        Mat maskMatrix = zeros(new org.opencv.core.Size(matGrey.width(), matGrey.height()), CV_8U);
-
-        drawContours(maskMatrix, bestContourList, 0, new Scalar(255.0, 255.0, 255.0, 255.0), -1);
-        drawContours(maskMatrix, bestContourList, 0, new Scalar(0.0, 0.0, 0.0, 0.0), 2);
-
-        Core.bitwise_and(matGreyAdapted, maskMatrix, matGreyAdapted);
-
-        maskMatrix = zeros(new org.opencv.core.Size(matGreyAdapted.width() + 2, matGreyAdapted.height() + 2), CV_8U);
-        floodFill(matGreyAdapted, maskMatrix, new Point(0, 0), new Scalar(255, 255));
+        Mat binaryMask = new Mat();
+        Mat circlesMat = new Mat();
+        inRange(matGreyAdapted, new Scalar(0, 0, 130), new Scalar(179, 255, 255), matGreyAdapted);
+        HoughCircles(binaryMask, circlesMat, HOUGH_GRADIENT, 1, 10, 10, 15, 0, 0);
 
         findContours(matGreyAdapted, contours, hierarchy, RETR_TREE, CHAIN_APPROX_NONE);
 
