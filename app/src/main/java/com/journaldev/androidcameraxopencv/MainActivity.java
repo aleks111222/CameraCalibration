@@ -4,6 +4,7 @@ import static org.opencv.core.Core.NORM_L2;
 import static org.opencv.core.Core.NORM_MINMAX;
 import static org.opencv.core.Core.bitwise_not;
 import static org.opencv.core.Core.divide;
+import static org.opencv.core.Core.findNonZero;
 import static org.opencv.core.Core.inRange;
 import static org.opencv.core.Core.magnitude;
 import static org.opencv.core.Core.mean;
@@ -88,6 +89,7 @@ import org.opencv.core.CvType;
 import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDouble;
+import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
@@ -1004,7 +1006,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         maskMatrix = zeros(new org.opencv.core.Size(matGreyAdapted.width() + 2, matGreyAdapted.height() + 2), CV_8U);
         floodFill(matGreyAdapted, maskMatrix, new Point(0, 0), new Scalar(255, 255));
 
-        bitwise_not(matGreyAdapted, matGreyAdapted);
+        Mat whitePixels = new Mat();
+        findNonZero();
+        MatOfInt hull = new MatOfInt();
+        bitwise_not(matGreyAdapted, whitePixels);
+        MatOfPoint whitePixelPoints = new MatOfPoint(matGreyAdapted);
+
+        convexHull(whitePixelPoints, hull);
 
         //findContours(matGreyAdapted, contours, hierarchy, RETR_TREE, CHAIN_APPROX_NONE);
 
