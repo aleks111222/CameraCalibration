@@ -2,6 +2,7 @@ package com.journaldev.androidcameraxopencv;
 
 import static org.opencv.core.Core.NORM_L2;
 import static org.opencv.core.Core.NORM_MINMAX;
+import static org.opencv.core.Core.bitwise_not;
 import static org.opencv.core.Core.divide;
 import static org.opencv.core.Core.inRange;
 import static org.opencv.core.Core.magnitude;
@@ -972,39 +973,51 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        org.opencv.imgproc.Imgproc.threshold(matGrey, matGreyAdapted, 125, 255, THRESH_BINARY);
         threshold(matGrey, matGreyAdapted, 127, 255, THRESH_BINARY);
         normalize(matGreyAdapted, matGreyAdapted, 0, 255, NORM_MINMAX);
-//        findContours(matGreyAdapted, uselessContours, uselessHierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
-//
-//        double maxArea = 0.0;
-//        MatOfPoint bestContour = new MatOfPoint();
-//        for (MatOfPoint contour : uselessContours) {
-//            double area = contourArea(contour);
-//            if (area > 1000.0) {
-//                if (area > maxArea) {
-//                    maxArea = area;
-//                    bestContour = contour;
-//                }
-//            }
-//        }
-//
-//        List<MatOfPoint> bestContourList = new ArrayList<>();
-//        bestContourList.add(bestContour);
-//
-//        Mat maskMatrix = zeros(new org.opencv.core.Size(matGrey.width(), matGrey.height()), CV_8U);
-//        if (bestContourList.size() != 0) {
-//            drawContours(maskMatrix, bestContourList, 0, new Scalar(255.0, 255.0, 255.0, 255.0), -1);
-//            drawContours(maskMatrix, bestContourList, 0, new Scalar(0.0, 0.0, 0.0, 0.0), 2);
-//        }
-//        Core.bitwise_and(matGreyAdapted, maskMatrix, matGreyAdapted);
 
-//        maskMatrix = zeros(new org.opencv.core.Size(matGreyAdapted.width() + 2, matGreyAdapted.height() + 2), CV_8U);
-//        floodFill(matGreyAdapted, maskMatrix, new Point(0, 0), new Scalar(255, 255));
+        Canny(matGreyAdapted, matGreyAdapted, 50, 150, 3, false);
+
+        findContours(matGreyAdapted, uselessContours, uselessHierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+
+        double maxArea = 0.0;
+        MatOfPoint bestContour = new MatOfPoint();
+        for (MatOfPoint contour : uselessContours) {
+            double area = contourArea(contour);
+            if (area > 1000.0) {
+                if (area > maxArea) {
+                    maxArea = area;
+                    bestContour = contour;
+                }
+            }
+        }
+
+        List<MatOfPoint> bestContourList = new ArrayList<>();
+        bestContourList.add(bestContour);
+
+        Mat maskMatrix = zeros(new org.opencv.core.Size(matGrey.width(), matGrey.height()), CV_8U);
+        if (bestContour.toList().size() > 0) {
+            drawContours(maskMatrix, bestContourList, -1, new Scalar(255.0, 255.0, 255.0, 255.0), -1);
+            drawContours(maskMatrix, bestContourList, -1, new Scalar(0.0, 0.0, 0.0, 0.0), 2);
+        }
+        Core.bitwise_and(matGreyAdapted, maskMatrix, matGreyAdapted);
+        //bitwise_not(matGreyAdapted, matGreyAdapted);
+
+        maskMatrix = zeros(new org.opencv.core.Size(matGreyAdapted.width() + 2, matGreyAdapted.height() + 2), CV_8U);
+        //floodFill(matGreyAdapted, maskMatrix, new Point(0, 0), new Scalar(255, 255));
 
         Mat binaryMask = new Mat();
         Mat circlesMat = new Mat();
-        inRange(matGreyAdapted, new Scalar(0, 0, 130), new Scalar(179, 255, 255), matGreyAdapted);
-        HoughCircles(binaryMask, circlesMat, HOUGH_GRADIENT, 1, 10, 10, 15, 0, 0);
 
-        findContours(matGreyAdapted, contours, hierarchy, RETR_TREE, CHAIN_APPROX_NONE);
+//        inRange(matGreyAdapted, new Scalar(0, 0, 130), new Scalar(179, 255, 255), binaryMask);
+        HoughCircles(matGreyAdapted, circlesMat, HOUGH_GRADIENT, 1, 50, 50, 50, 100, 1000);
+
+        Log.d("Debug", "" + circlesMat.size());
+        if (circlesMat.size().width > 0) {
+            for (int i = 0; i < circlesMat.size().width; i++) {
+                circle(matColor, new Point(circlesMat.get(0, i)[0], circlesMat.get(0, i)[1]), (int) circlesMat.get(0, i)[2], COLOR_RED);
+            }
+        }
+
+        //findContours(matGreyAdapted, contours, hierarchy, RETR_TREE, CHAIN_APPROX_NONE);
 
         int depth;
         Double contourId;
@@ -1102,11 +1115,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             int additionalPointsAdded = 0;
                             for(Point point : contour2f.toArray()) {
                                 if(abs(dx) < 100 && (dy / abs(dy) == ((point.y - meanCenter.y) / abs(point.y - meanCenter.y))) && abs(point.x - meanCenter.x) < 1) {
-                                    circle(matColor, point, 3, COLOR_RED, -1);
+                                    //circle(matColor, point, 3, COLOR_RED, -1);
                                     imagePoints.add(point);
                                 }
                                 if(dx > 100 && abs(m * (point.x - meanCenter.x) - (point.y - meanCenter.y)) < 1) {
-                                    circle(matColor, point, 3, COLOR_RED, -1);
+                                    //circle(matColor, point, 3, COLOR_RED, -1);
                                     imagePoints.add(point);
                                 }
                             }
@@ -1114,11 +1127,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 contours.get(id.intValue()).convertTo(contourInner2f, CV_32F);
                                 for(Point point : contourInner2f.toArray()) {
                                     if(abs(dx) < 100 && (dy / abs(dy) == ((point.y - meanCenter.y) / abs(point.y - meanCenter.y))) && abs(point.x - meanCenter.x) < 1) {
-                                        circle(matColor, point, 3, COLOR_RED, -1);
+                                        //circle(matColor, point, 3, COLOR_RED, -1);
                                         imagePoints.add(point);
                                     }
                                     if(dx > 100 && abs(m * (point.x - meanCenter.x) - (point.y - meanCenter.y)) < 1) {
-                                        circle(matColor, point, 3, COLOR_RED, -1);
+                                        //circle(matColor, point, 3, COLOR_RED, -1);
                                         imagePoints.add(point);
                                     } /*else if((point.x - meanCenter.x) - abs(dx) < 10) {
                                         imagePoints.add(point);
@@ -1157,7 +1170,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
 
-        return matColor;
+        return matGreyAdapted;
     }
 
     private void showAcceptedRejectedButton(boolean acceptedRejected) {
