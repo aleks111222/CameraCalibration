@@ -971,10 +971,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //int s = matGrey.width() / 8;
         //adaptiveThreshold(matGrey, matGreyAdapted, 255, ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, s, 7.0);
 //        org.opencv.imgproc.Imgproc.threshold(matGrey, matGreyAdapted, 125, 255, THRESH_BINARY);
+
         threshold(matGrey, matGreyAdapted, 127, 255, THRESH_BINARY);
         normalize(matGreyAdapted, matGreyAdapted, 0, 255, NORM_MINMAX);
 
-        Canny(matGreyAdapted, matGreyAdapted, 50, 150, 3, false);
+        //Canny(matGreyAdapted, matGreyAdapted, 50, 150, 3, false);
 
         findContours(matGreyAdapted, uselessContours, uselessHierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
 
@@ -999,23 +1000,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             drawContours(maskMatrix, bestContourList, -1, new Scalar(0.0, 0.0, 0.0, 0.0), 2);
         }
         Core.bitwise_and(matGreyAdapted, maskMatrix, matGreyAdapted);
-        //bitwise_not(matGreyAdapted, matGreyAdapted);
 
         maskMatrix = zeros(new org.opencv.core.Size(matGreyAdapted.width() + 2, matGreyAdapted.height() + 2), CV_8U);
-        //floodFill(matGreyAdapted, maskMatrix, new Point(0, 0), new Scalar(255, 255));
+        floodFill(matGreyAdapted, maskMatrix, new Point(0, 0), new Scalar(255, 255));
 
-        Mat binaryMask = new Mat();
-        Mat circlesMat = new Mat();
-
-//        inRange(matGreyAdapted, new Scalar(0, 0, 130), new Scalar(179, 255, 255), binaryMask);
-        HoughCircles(matGreyAdapted, circlesMat, HOUGH_GRADIENT, 1, 50, 50, 50, 100, 1000);
-
-        Log.d("Debug", "" + circlesMat.size());
-        if (circlesMat.size().width > 0) {
-            for (int i = 0; i < circlesMat.size().width; i++) {
-                circle(matColor, new Point(circlesMat.get(0, i)[0], circlesMat.get(0, i)[1]), (int) circlesMat.get(0, i)[2], COLOR_RED);
-            }
-        }
+        bitwise_not(matGreyAdapted, matGreyAdapted);
 
         //findContours(matGreyAdapted, contours, hierarchy, RETR_TREE, CHAIN_APPROX_NONE);
 
