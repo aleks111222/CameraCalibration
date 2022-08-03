@@ -1007,12 +1007,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         floodFill(matGreyAdapted, maskMatrix, new Point(0, 0), new Scalar(255, 255));
 
         Mat whitePixels = new Mat();
-        findNonZero();
+        findNonZero(matGreyAdapted, whitePixels);
+        MatOfPoint whitePixelPoints = new MatOfPoint(whitePixels);
         MatOfInt hull = new MatOfInt();
-        bitwise_not(matGreyAdapted, whitePixels);
-        MatOfPoint whitePixelPoints = new MatOfPoint(matGreyAdapted);
+        //bitwise_not(matGreyAdapted, whitePixels);
 
         convexHull(whitePixelPoints, hull);
+
+        Mat hullMat = new Mat();
+        findNonZero(hull, hullMat);
+        MatOfPoint hullMatPoint = new MatOfPoint(hullMat);
+        MatOfPoint2f hullMatPoint2f = new MatOfPoint2f(hullMatPoint.toArray());
+
+        //RotatedRect ellipse = fitEllipse(hullMatPoint2f);
 
         //findContours(matGreyAdapted, contours, hierarchy, RETR_TREE, CHAIN_APPROX_NONE);
 
