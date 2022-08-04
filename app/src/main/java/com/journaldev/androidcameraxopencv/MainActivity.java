@@ -1006,22 +1006,36 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         maskMatrix = zeros(new org.opencv.core.Size(matGreyAdapted.width() + 2, matGreyAdapted.height() + 2), CV_8U);
         floodFill(matGreyAdapted, maskMatrix, new Point(0, 0), new Scalar(255, 255));
 
-        Mat whitePixels = new Mat();
-        findNonZero(matGreyAdapted, whitePixels);
-        MatOfPoint whitePixelPoints = new MatOfPoint(whitePixels);
-        MatOfInt hull = new MatOfInt();
-        //bitwise_not(matGreyAdapted, whitePixels);
 
-        convexHull(whitePixelPoints, hull);
-
-        Mat hullMat = new Mat();
-        findNonZero(hull, hullMat);
-        MatOfPoint hullMatPoint = new MatOfPoint(hullMat);
-        MatOfPoint2f hullMatPoint2f = new MatOfPoint2f(hullMatPoint.toArray());
-
-        //RotatedRect ellipse = fitEllipse(hullMatPoint2f);
+//        Mat binaryMatGreyAdapted = new Mat();
+//        findNonZero(matGreyAdapted, binaryMatGreyAdapted);
+//        MatOfPoint binaryMatOfPoint = new MatOfPoint(binaryMatGreyAdapted);
+//        MatOfPoint2f binaryMatOfPoint2f = new MatOfPoint2f(binaryMatOfPoint.toArray());
 
         //findContours(matGreyAdapted, contours, hierarchy, RETR_TREE, CHAIN_APPROX_NONE);
+
+        List<MatOfPoint> contoursNew = new ArrayList<>();
+        findContours(matGreyAdapted, contoursNew, hierarchy, RETR_TREE, CHAIN_APPROX_NONE);
+        MatOfPoint2f tempMat2f = new MatOfPoint2f();
+
+        for (int i = 0; i < contoursNew.size(); i++) {
+            if (contoursNew.get(i).toArray().length > 4) {
+                contoursNew.get(i).convertTo(tempMat2f, CV_32F);
+                RotatedRect ellipse = minAreaRect(tempMat2f);
+                //ellipse(matColor, ellipse, COLOR_RED, 4);
+            }
+        }
+        if (contoursNew.toArray().length > 6) {
+            List<Point> allPoints = new ArrayList<>();
+            allPoints.addAll(contoursNew.get(1).toList());
+            allPoints.addAll(contoursNew.get(6).toList());
+            MatOfPoint mat = new MatOfPoint();
+            mat.fromList(allPoints);
+            mat.convertTo(tempMat2f, CV_32F);
+            RotatedRect ellipse = minAreaRect(tempMat2f);
+            ellipse(matColor, ellipse, COLOR_RED, 4);
+            //drawContours(matColor, contoursNew, 6, COLOR_RED);
+        }
 
         int depth;
         Double contourId;
@@ -1174,7 +1188,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
 
-        return matGreyAdapted;
+        return matColor;
     }
 
     private void showAcceptedRejectedButton(boolean acceptedRejected) {
