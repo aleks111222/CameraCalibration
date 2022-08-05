@@ -1059,15 +1059,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
 //        for (int i = 0; i < ellipsesWithCommonCentersBest.size(); i++) {
-//            ellipse(matColor, ellipsesWithCommonCentersBest.get(i), COLOR_RED, 2);
+//            ellipse(matColor, ellipsesWithCommonCentersBest.get(0), COLOR_RED, 2);
 //        }
-        drawContours(matColor, contoursInBestEllipseOrder, -1, COLOR_RED, 2);
+//        drawContours(matColor, contoursInBestEllipseOrder, 0, COLOR_RED, 2);
 
-//        if (ellipsesWithCommonCentersBest.size() > 1) {
-//            circle(matColor, ellipsesWithCommonCentersBest.get(0).center, 3, COLOR_RED, -1);
-//        }
+
+        Point averageCenter = new Point(0, 0);
+        if (ellipsesWithCommonCentersBest.size() > 1) {
+            averageCenter = ellipsesWithCommonCentersBest.get(0).center;
+        }
+        // SORTOWAC CONTOURS PO ODLEGLOSCI PUNKTU RANDOMOWEGO OD SRODKA
 
         // JEST MOZLIWOSC TERA POLACZENIA W JEDNE MATY TE MATY KTORYCH ELIPSYMAJA SRODEK W TEJ SAMEJ ODLEGLOSCI OD SRODKA
+
 
 
 //        if (contoursNew.toArray().length > 6) {
