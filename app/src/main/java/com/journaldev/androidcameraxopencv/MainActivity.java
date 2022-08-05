@@ -1012,6 +1012,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        MatOfPoint2f binaryMatOfPoint2f = new MatOfPoint2f(binaryMatOfPoint.toArray());
 
         //findContours(matGreyAdapted, contours, hierarchy, RETR_TREE, CHAIN_APPROX_NONE);
+
         List<RotatedRect> ellipses = new ArrayList<>();
         List<MatOfPoint> contoursInEllipseOrder = new ArrayList<>();
         List<MatOfPoint> contoursNew = new ArrayList<>();
@@ -1057,10 +1058,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             contoursTemp.clear();
         }
 
-        if ( ellipsesWithCommonCentersBest.size() > 0) {
-//            ellipse(matColor, ellipses.get(0), COLOR_RED, 2);
-            Log.d("Debug", contoursInBestEllipseOrder.size() + " " + ellipsesWithCommonCentersBest.size());
-        }
+//        for (int i = 0; i < ellipsesWithCommonCentersBest.size(); i++) {
+//            ellipse(matColor, ellipsesWithCommonCentersBest.get(i), COLOR_RED, 2);
+//        }
+        drawContours(matColor, contoursInBestEllipseOrder, -1, COLOR_RED, 2);
 
 //        if (ellipsesWithCommonCentersBest.size() > 1) {
 //            circle(matColor, ellipsesWithCommonCentersBest.get(0).center, 3, COLOR_RED, -1);
