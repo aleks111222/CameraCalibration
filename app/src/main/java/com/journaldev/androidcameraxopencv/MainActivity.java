@@ -1013,11 +1013,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         //findContours(matGreyAdapted, contours, hierarchy, RETR_TREE, CHAIN_APPROX_NONE);
         List<RotatedRect> ellipses = new ArrayList<>();
-
+        List<MatOfPoint> contoursInEllipseOrder = new ArrayList<>();
         List<MatOfPoint> contoursNew = new ArrayList<>();
         findContours(matGreyAdapted, contoursNew, hierarchy, RETR_LIST, CHAIN_APPROX_NONE);
-        MatOfPoint2f tempMat2f = new MatOfPoint2f();
         if (contoursNew.size() >= 6) {
+            MatOfPoint2f tempMat2f = new MatOfPoint2f();
             for (int i = contoursNew.size() - 1; i >= 0; i--) {
                 if (contoursNew.get(i).size().height > 5000) {
                     contoursNew.remove(i);
@@ -1027,6 +1027,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     contoursNew.get(i).convertTo(tempMat2f, CV_32F);
                     RotatedRect minAreaRect = minAreaRect(tempMat2f);
                     ellipses.add(minAreaRect);
+                    contoursInEllipseOrder.add(contoursNew.get(i));
 //                    ellipse(matColor, minAreaRect, COLOR_RED, 2);
                 }
             }
@@ -1034,22 +1035,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         List<RotatedRect> ellipsesWithCommonCentersBest = new ArrayList<>();
         List<RotatedRect> ellipsesWithCommonCenters = new ArrayList<>();
+        List<MatOfPoint> contoursTemp = new ArrayList<>();
+        List<MatOfPoint> contoursInBestEllipseOrder = new ArrayList<>();
+
         for (int i = 0; i < ellipses.size(); i++) {
             ellipsesWithCommonCenters.add(ellipses.get(i));
+            contoursTemp.add(contoursInEllipseOrder.get(i));
             for (int j = i + 1; j < ellipses.size(); j++) {
                 if ((sqrt(pow(ellipses.get(i).center.x - ellipses.get(j).center.x, 2) + pow(ellipses.get(i).center.y - ellipses.get(j).center.y, 2))) < 50) {
                     ellipsesWithCommonCenters.add(ellipses.get(j));
+                    contoursTemp.add(contoursInEllipseOrder.get(j));
                 }
             }
             if (ellipsesWithCommonCenters.size() > ellipsesWithCommonCentersBest.size()) {
                 ellipsesWithCommonCentersBest.clear();
                 ellipsesWithCommonCentersBest.addAll(ellipsesWithCommonCenters);
+                contoursInBestEllipseOrder.clear();
+                contoursInBestEllipseOrder.addAll(contoursTemp);
             }
             ellipsesWithCommonCenters.clear();
+            contoursTemp.clear();
         }
 
-        for (int i = 0; i < ellipsesWithCommonCentersBest.size(); i++) {
-            ellipse(matColor, ellipsesWithCommonCentersBest.get(i), COLOR_RED, 2);
+        if ( ellipsesWithCommonCentersBest.size() > 0) {
+//            ellipse(matColor, ellipses.get(0), COLOR_RED, 2);
+            Log.d("Debug", contoursInBestEllipseOrder.size() + " " + ellipsesWithCommonCentersBest.size());
         }
 
 //        if (ellipsesWithCommonCentersBest.size() > 1) {
