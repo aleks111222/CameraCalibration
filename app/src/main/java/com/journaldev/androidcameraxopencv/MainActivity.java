@@ -1005,7 +1005,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         maskMatrix = zeros(new org.opencv.core.Size(matGreyAdapted.width() + 2, matGreyAdapted.height() + 2), CV_8U);
         floodFill(matGreyAdapted, maskMatrix, new Point(0, 0), new Scalar(255, 255));
-
+//
 
 //        Mat binaryMatGreyAdapted = new Mat();
 //        findNonZero(matGreyAdapted, binaryMatGreyAdapted);
@@ -1015,27 +1015,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //findContours(matGreyAdapted, contours, hierarchy, RETR_TREE, CHAIN_APPROX_NONE);
 
         List<MatOfPoint> contoursNew = new ArrayList<>();
-        findContours(matGreyAdapted, contoursNew, hierarchy, RETR_TREE, CHAIN_APPROX_NONE);
+        findContours(matGreyAdapted, contoursNew, hierarchy, RETR_LIST, CHAIN_APPROX_NONE);
         MatOfPoint2f tempMat2f = new MatOfPoint2f();
 
-        for (int i = 0; i < contoursNew.size(); i++) {
+        for (int i = contoursNew.size() - 1; i >= 0; i--) {
+            if (contoursNew.get(i).size().height > 5000) {
+                contoursNew.remove(i);
+                continue;
+            }
             if (contoursNew.get(i).toArray().length > 4) {
                 contoursNew.get(i).convertTo(tempMat2f, CV_32F);
                 RotatedRect ellipse = minAreaRect(tempMat2f);
-                //ellipse(matColor, ellipse, COLOR_RED, 4);
+                ellipse(matColor, ellipse, COLOR_RED, 2);
             }
         }
-        if (contoursNew.toArray().length > 6) {
-            List<Point> allPoints = new ArrayList<>();
-            allPoints.addAll(contoursNew.get(1).toList());
-            allPoints.addAll(contoursNew.get(6).toList());
-            MatOfPoint mat = new MatOfPoint();
-            mat.fromList(allPoints);
-            mat.convertTo(tempMat2f, CV_32F);
-            RotatedRect ellipse = minAreaRect(tempMat2f);
-            ellipse(matColor, ellipse, COLOR_RED, 4);
-            //drawContours(matColor, contoursNew, 6, COLOR_RED);
-        }
+//        if (contoursNew.toArray().length > 6) {
+//            List<Point> allPoints = new ArrayList<>();
+//            allPoints.addAll(contoursNew.get(1).toList());
+//            allPoints.addAll(contoursNew.get(6).toList());
+//            MatOfPoint mat = new MatOfPoint();
+//            mat.fromList(allPoints);
+//            mat.convertTo(tempMat2f, CV_32F);
+//            RotatedRect rectangle = minAreaRect(tempMat2f);
+//            ellipse(matColor, rectangle, COLOR_RED, 3);
+//        }
 
         int depth;
         Double contourId;
