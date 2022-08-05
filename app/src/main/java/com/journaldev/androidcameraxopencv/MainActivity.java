@@ -1012,8 +1012,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        MatOfPoint2f binaryMatOfPoint2f = new MatOfPoint2f(binaryMatOfPoint.toArray());
 
         //findContours(matGreyAdapted, contours, hierarchy, RETR_TREE, CHAIN_APPROX_NONE);
-
-        List<RotatedRect> ellipsesWithCommonCentre = new ArrayList<>();
         List<RotatedRect> ellipses = new ArrayList<>();
 
         List<MatOfPoint> contoursNew = new ArrayList<>();
@@ -1029,27 +1027,38 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     contoursNew.get(i).convertTo(tempMat2f, CV_32F);
                     RotatedRect minAreaRect = minAreaRect(tempMat2f);
                     ellipses.add(minAreaRect);
-                    ellipse(matColor, minAreaRect, COLOR_RED, 2);
+//                    ellipse(matColor, minAreaRect, COLOR_RED, 2);
                 }
             }
         }
-        int highestNumberOfCommonCenters = 1;
+
+        List<RotatedRect> ellipsesWithCommonCentersBest = new ArrayList<>();
+        List<RotatedRect> ellipsesWithCommonCenters = new ArrayList<>();
         for (int i = 0; i < ellipses.size(); i++) {
-            int numOfCommonCentres = 1;
-            ellipsesWithCommonCentre.add(ellipses.get(i));
+            ellipsesWithCommonCenters.add(ellipses.get(i));
             for (int j = i + 1; j < ellipses.size(); j++) {
                 if ((sqrt(pow(ellipses.get(i).center.x - ellipses.get(j).center.x, 2) + pow(ellipses.get(i).center.y - ellipses.get(j).center.y, 2))) < 50) {
-                    numOfCommonCentres++;
-                    ellipsesWithCommonCentre.add(ellipses.get(j));
+                    ellipsesWithCommonCenters.add(ellipses.get(j));
                 }
             }
-            if (numOfCommonCentres > highestNumberOfCommonCenters) {
-                highestNumberOfCommonCenters = numOfCommonCentres;
-            } else {
-                ellipsesWithCommonCentre.clear();
+            if (ellipsesWithCommonCenters.size() > ellipsesWithCommonCentersBest.size()) {
+                ellipsesWithCommonCentersBest.clear();
+                ellipsesWithCommonCentersBest.addAll(ellipsesWithCommonCenters);
             }
+            ellipsesWithCommonCenters.clear();
         }
-        Log.d("Debug", "" + highestNumberOfCommonCenters);
+
+        for (int i = 0; i < ellipsesWithCommonCentersBest.size(); i++) {
+            ellipse(matColor, ellipsesWithCommonCentersBest.get(i), COLOR_RED, 2);
+        }
+
+//        if (ellipsesWithCommonCentersBest.size() > 1) {
+//            circle(matColor, ellipsesWithCommonCentersBest.get(0).center, 3, COLOR_RED, -1);
+//        }
+
+        // JEST MOZLIWOSC TERA POLACZENIA W JEDNE MATY TE MATY KTORYCH ELIPSYMAJA SRODEK W TEJ SAMEJ ODLEGLOSCI OD SRODKA
+
+
 //        if (contoursNew.toArray().length > 6) {
 //            List<Point> allPoints = new ArrayList<>();
 //            allPoints.addAll(contoursNew.get(1).toList());
