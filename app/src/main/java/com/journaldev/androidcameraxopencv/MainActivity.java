@@ -1005,7 +1005,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         maskMatrix = zeros(new org.opencv.core.Size(matGreyAdapted.width() + 2, matGreyAdapted.height() + 2), CV_8U);
         floodFill(matGreyAdapted, maskMatrix, new Point(0, 0), new Scalar(255, 255));
-//
 
 //        Mat binaryMatGreyAdapted = new Mat();
 //        findNonZero(matGreyAdapted, binaryMatGreyAdapted);
@@ -1014,21 +1013,43 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         //findContours(matGreyAdapted, contours, hierarchy, RETR_TREE, CHAIN_APPROX_NONE);
 
+        List<RotatedRect> ellipsesWithCommonCentre = new ArrayList<>();
+        List<RotatedRect> ellipses = new ArrayList<>();
+
         List<MatOfPoint> contoursNew = new ArrayList<>();
         findContours(matGreyAdapted, contoursNew, hierarchy, RETR_LIST, CHAIN_APPROX_NONE);
         MatOfPoint2f tempMat2f = new MatOfPoint2f();
-
-        for (int i = contoursNew.size() - 1; i >= 0; i--) {
-            if (contoursNew.get(i).size().height > 5000) {
-                contoursNew.remove(i);
-                continue;
-            }
-            if (contoursNew.get(i).toArray().length > 4) {
-                contoursNew.get(i).convertTo(tempMat2f, CV_32F);
-                RotatedRect ellipse = minAreaRect(tempMat2f);
-                ellipse(matColor, ellipse, COLOR_RED, 2);
+        if (contoursNew.size() >= 6) {
+            for (int i = contoursNew.size() - 1; i >= 0; i--) {
+                if (contoursNew.get(i).size().height > 5000) {
+                    contoursNew.remove(i);
+                    continue;
+                }
+                if (contoursNew.get(i).toArray().length > 4) {
+                    contoursNew.get(i).convertTo(tempMat2f, CV_32F);
+                    RotatedRect minAreaRect = minAreaRect(tempMat2f);
+                    ellipses.add(minAreaRect);
+                    ellipse(matColor, minAreaRect, COLOR_RED, 2);
+                }
             }
         }
+        int highestNumberOfCommonCenters = 1;
+        for (int i = 0; i < ellipses.size(); i++) {
+            int numOfCommonCentres = 1;
+            ellipsesWithCommonCentre.add(ellipses.get(i));
+            for (int j = i + 1; j < ellipses.size(); j++) {
+                if ((sqrt(pow(ellipses.get(i).center.x - ellipses.get(j).center.x, 2) + pow(ellipses.get(i).center.y - ellipses.get(j).center.y, 2))) < 50) {
+                    numOfCommonCentres++;
+                    ellipsesWithCommonCentre.add(ellipses.get(j));
+                }
+            }
+            if (numOfCommonCentres > highestNumberOfCommonCenters) {
+                highestNumberOfCommonCenters = numOfCommonCentres;
+            } else {
+                ellipsesWithCommonCentre.clear();
+            }
+        }
+        Log.d("Debug", "" + highestNumberOfCommonCenters);
 //        if (contoursNew.toArray().length > 6) {
 //            List<Point> allPoints = new ArrayList<>();
 //            allPoints.addAll(contoursNew.get(1).toList());
