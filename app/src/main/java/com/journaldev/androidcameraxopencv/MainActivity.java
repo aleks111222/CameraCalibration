@@ -1137,10 +1137,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
 
-        // SORTOWAC CONTOURS PO ODLEGLOSCI PUNKTU RANDOMOWEGO OD SRODKA
-
-        // JEST MOZLIWOSC TERA POLACZENIA W JEDNE MATY TE MATY KTORYCH ELIPSYMAJA SRODEK W TEJ SAMEJ ODLEGLOSCI OD SRODKA
-
 //        if (contoursNew.toArray().length > 6) {
 //            List<Point> allPoints = new ArrayList<>();
 //            allPoints.addAll(contoursNew.get(1).toList());
