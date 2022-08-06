@@ -1100,24 +1100,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             contoursNew.removeAll(contoursInBestEllipseOrder);
             List<Point> allPoints = new ArrayList<>();
             MatOfPoint mergedMat = new MatOfPoint();
-            int[] mergedContourIndexes;
-
+            List<Integer> mergedIndexes = new ArrayList<>();
             List<MatOfPoint> finalContours = new ArrayList<>();
             for (int i = 0; i < contoursNew.size(); i++) {
                 allPoints.clear();
                 allPoints.addAll(contoursNew.get(i).toList());
                 double length1 = sqrt(pow(contoursNew.get(i).toArray()[0].x - averageCenter.x, 2) + pow(contoursNew.get(i).toArray()[0].y - averageCenter.y, 2));
                 for (int j = i + 1; j < contoursNew.size(); j++) {
-                    double length2 = sqrt(pow(contoursNew.get(j).toArray()[0].x - averageCenter.x, 2) + pow(contoursNew.get(j).toArray()[0].y - averageCenter.y, 2));
-                    if (abs(length1 - length2) < 100) {
-                        Log.d("Debug", "lel");
-                        allPoints.addAll(contoursNew.get(j).toList());
+                    if (!mergedIndexes.contains(j)) {
+                        double length2 = sqrt(pow(contoursNew.get(j).toArray()[0].x - averageCenter.x, 2) + pow(contoursNew.get(j).toArray()[0].y - averageCenter.y, 2));
+                        if (abs(length1 - length2) < 100) {
+                            allPoints.addAll(contoursNew.get(j).toList());
+                            mergedIndexes.add(j);
+                        }
                     }
                 }
-                mergedMat.fromList(allPoints);
-                finalContours.add(mergedMat);
+                if (!mergedIndexes.contains(i)) {
+                    mergedMat.fromList(allPoints);
+                    finalContours.add(mergedMat);
+                }
             }
-            drawContours(matColor, finalContours, -1, COLOR_RED, 2);
+
+            finalContours.addAll(contoursInBestEllipseOrder);
+            drawContours(matColor, finalContours, -1, COLOR_RED);
         }
 
         // SORTOWAC CONTOURS PO ODLEGLOSCI PUNKTU RANDOMOWEGO OD SRODKA
