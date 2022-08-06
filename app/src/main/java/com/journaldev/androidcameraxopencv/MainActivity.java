@@ -1061,18 +1061,68 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        for (int i = 0; i < ellipsesWithCommonCentersBest.size(); i++) {
 //            ellipse(matColor, ellipsesWithCommonCentersBest.get(0), COLOR_RED, 2);
 //        }
-//        drawContours(matColor, contoursInBestEllipseOrder, 0, COLOR_RED, 2);
 
-
-        Point averageCenter = new Point(0, 0);
         if (ellipsesWithCommonCentersBest.size() > 1) {
-            averageCenter = ellipsesWithCommonCentersBest.get(0).center;
+            Point averageCenter = new Point(0, 0);
+
+            MatOfPoint biggestEllipseContour = contoursInBestEllipseOrder.get(0);
+            RotatedRect biggestEllipse = ellipsesWithCommonCentersBest.get(0);
+
+            for (int i = 0; i < ellipsesWithCommonCentersBest.size(); i++) {
+                if (ellipsesWithCommonCentersBest.get(i).size.height > biggestEllipse.size.height
+                        && ellipsesWithCommonCentersBest.get(i).size.width > biggestEllipse.size.width) {
+                    biggestEllipse = ellipsesWithCommonCentersBest.get(i);
+                    biggestEllipseContour = contoursInBestEllipseOrder.get(i);
+                }
+            }
+
+            averageCenter = biggestEllipse.center;
+
+
+            // WZIAC ROTACJE PUNKTU ZERO WZGLEDEM AVERAGE CENTER I ODROTOWAC
+
+//            for (Point point : biggestEllipseContour.toArray()) {
+//                if (point.x == averageCenter.x) {
+//                    circle(matColor, point, 3, COLOR_RED, -1);
+//                }
+//            }
+
+            List<Point> mostOuterEllipsePoints = new ArrayList<>();
+            for (int i = 0; i < 8; i++) {
+                if (i == 0 || i == 4) {
+                    continue;
+                }
+                Point ringPoint = biggestEllipseContour.toArray()[i * (biggestEllipseContour.toArray().length / 8)];
+                mostOuterEllipsePoints.add(ringPoint);
+//                circle(matColor, ringPoint, 3, COLOR_RED, -1);
+            }
+
+            contoursNew.removeAll(contoursInBestEllipseOrder);
+            List<Point> allPoints = new ArrayList<>();
+            MatOfPoint mergedMat = new MatOfPoint();
+            int[] mergedContourIndexes;
+
+            List<MatOfPoint> finalContours = new ArrayList<>();
+            for (int i = 0; i < contoursNew.size(); i++) {
+                allPoints.clear();
+                allPoints.addAll(contoursNew.get(i).toList());
+                double length1 = sqrt(pow(contoursNew.get(i).toArray()[0].x - averageCenter.x, 2) + pow(contoursNew.get(i).toArray()[0].y - averageCenter.y, 2));
+                for (int j = i + 1; j < contoursNew.size(); j++) {
+                    double length2 = sqrt(pow(contoursNew.get(j).toArray()[0].x - averageCenter.x, 2) + pow(contoursNew.get(j).toArray()[0].y - averageCenter.y, 2));
+                    if (abs(length1 - length2) < 100) {
+                        Log.d("Debug", "lel");
+                        allPoints.addAll(contoursNew.get(j).toList());
+                    }
+                }
+                mergedMat.fromList(allPoints);
+                finalContours.add(mergedMat);
+            }
+            drawContours(matColor, finalContours, -1, COLOR_RED, 2);
         }
+
         // SORTOWAC CONTOURS PO ODLEGLOSCI PUNKTU RANDOMOWEGO OD SRODKA
 
         // JEST MOZLIWOSC TERA POLACZENIA W JEDNE MATY TE MATY KTORYCH ELIPSYMAJA SRODEK W TEJ SAMEJ ODLEGLOSCI OD SRODKA
-
-
 
 //        if (contoursNew.toArray().length > 6) {
 //            List<Point> allPoints = new ArrayList<>();
