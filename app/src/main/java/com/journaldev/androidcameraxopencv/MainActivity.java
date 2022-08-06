@@ -1063,7 +1063,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        }
 
         if (ellipsesWithCommonCentersBest.size() > 1) {
-            Point averageCenter = new Point(0, 0);
+            Point averageCenter = new Point();
 
             MatOfPoint biggestEllipseContour = contoursInBestEllipseOrder.get(0);
             RotatedRect biggestEllipse = ellipsesWithCommonCentersBest.get(0);
@@ -1077,7 +1077,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
 
             averageCenter = biggestEllipse.center;
-
 
             // WZIAC ROTACJE PUNKTU ZERO WZGLEDEM AVERAGE CENTER I ODROTOWAC
 
@@ -1102,6 +1101,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             MatOfPoint mergedMat = new MatOfPoint();
             List<Integer> mergedIndexes = new ArrayList<>();
             List<MatOfPoint> finalContours = new ArrayList<>();
+
+            finalContours.addAll(contoursInBestEllipseOrder);
+
             for (int i = 0; i < contoursNew.size(); i++) {
                 allPoints.clear();
                 allPoints.addAll(contoursNew.get(i).toList());
@@ -1121,8 +1123,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             }
 
-            finalContours.addAll(contoursInBestEllipseOrder);
-            drawContours(matColor, finalContours, -1, COLOR_RED);
+            Point finalAverageCenter = averageCenter;
+            Collections.sort(finalContours, new Comparator<MatOfPoint>() {
+                public int compare(MatOfPoint m1, MatOfPoint m2) {
+                    double length1 = sqrt(pow(m1.toArray()[0].x - finalAverageCenter.x, 2) + pow(m1.toArray()[0].y - finalAverageCenter.y, 2));
+                    double length2 = sqrt(pow(m2.toArray()[0].x - finalAverageCenter.x, 2) + pow(m2.toArray()[0].y - finalAverageCenter.y, 2));
+                    return Double.compare(length1, length2);
+                }
+            });
+
+            for (int i = 0; i < finalContours.size(); i++) {
+                putText(matColor, "" + i, finalContours.get(i).toArray()[0], FONT_HERSHEY_PLAIN, 3.0, COLOR_RED);
+            }
         }
 
         // SORTOWAC CONTOURS PO ODLEGLOSCI PUNKTU RANDOMOWEGO OD SRODKA
