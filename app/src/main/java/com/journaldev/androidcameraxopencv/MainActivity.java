@@ -1132,8 +1132,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             });
 
+            // POTEM SFIXOWAC ROTATION ZEBY [0] DLA KAZDEGO BYLO BLISKO CENTER X
+
+            List<Point> imagePoints = new ArrayList<>();
+
             for (int i = 0; i < finalContours.size(); i++) {
-                putText(matColor, "" + i, finalContours.get(i).toArray()[0], FONT_HERSHEY_PLAIN, 3.0, COLOR_RED);
+                for (int j = 0; j < mostOuterEllipsePoints.size(); j++) {
+                    double dy = mostOuterEllipsePoints.get(j).y - averageCenter.y;
+                    double dx = mostOuterEllipsePoints.get(j).x - averageCenter.x;
+                    double m = dy / dx;
+                    int counter = 0;
+                    int iterationsToSkip = 0;
+                    for (Point ringPoint : finalContours.get(i).toArray()) {
+                        if (iterationsToSkip != 0) {
+                            iterationsToSkip--;
+                            continue;
+                        }
+                        if(dx > 100 && abs(m * (ringPoint.x - averageCenter.x) - (ringPoint.y - averageCenter.y)) < 2) {
+                            putText(matColor, "" + ((i * 6) + j * 2 + counter), ringPoint, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED, 2);
+                            counter++;
+                            iterationsToSkip = 30;
+//                            circle(matColor, ringPoint, 3, COLOR_RED, -1);
+//                            imagePoints.add(ringPoint);
+                        }
+                    }
+                }
             }
         }
 
