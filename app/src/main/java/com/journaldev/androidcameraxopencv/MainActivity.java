@@ -1158,6 +1158,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 }
             }
+
+            // POPRAWIC TE PUKTY KTORE NIE SA PO KOLEI W OTWARTYCH KONTURACH
         }
 
 //        if (contoursNew.toArray().length > 6) {
