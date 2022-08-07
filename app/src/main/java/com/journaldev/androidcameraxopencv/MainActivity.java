@@ -1136,17 +1136,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             // POTEM SFIXOWAC ROTATION ZEBY [0] DLA KAZDEGO BYLO BLISKO CENTER X
 
-            Map<Integer, Point> imagePointsMap = new HashMap<>();
-            List<Point> imagePoints = new ArrayList<>();
             List<Point> currentRingPoints = new ArrayList<>();
+            Map<Integer, Point> imagePointsMap = new HashMap<>();
             boolean isThisMergedContour;
+            int currentId = 0;
             for (int i = 0; i < finalContours.size(); i++) {
                 isThisMergedContour = false;
                 for (int j = 0; j < mostOuterEllipsePoints.size(); j++) {
                     double dy = mostOuterEllipsePoints.get(j).y - averageCenter.y;
                     double dx = mostOuterEllipsePoints.get(j).x - averageCenter.x;
                     double m = dy / dx;
-                    int counter = 0;
                     int iterationsToSkip = 0;
                     currentRingPoints.clear();
                     for (Point ringPoint : finalContours.get(i).toArray()) {
@@ -1155,30 +1154,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             continue;
                         }
                         if (dx > 100 && abs(m * (ringPoint.x - averageCenter.x) - (ringPoint.y - averageCenter.y)) < 2) {
-//                            putText(matColor, "" + ((i * 6) + j + (counter > 1 ? 1 : 0) + ((counter > 1 ? counter - 2 : counter) * 3)), ringPoint, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED, 2);
                             iterationsToSkip = 30;
-                            //circle(matColor, ringPoint, 3, COLOR_RED, -1);
-                            if (currentRingPoints.size() > 0 && sqrt(pow(ringPoint.x - currentRingPoints.get(currentRingPoints.size() - 1).x, 2) +
+                            if (!isThisMergedContour && currentRingPoints.size() > 0 &&
+                                    sqrt(pow(ringPoint.x - currentRingPoints.get(currentRingPoints.size() - 1).x, 2) +
                                     pow(ringPoint.y - currentRingPoints.get(currentRingPoints.size() - 1).y, 2)) < 100) {
                                 isThisMergedContour = true;
                             }
-//                            imagePointsMap.put((i * 6) + j + (counter * 3), ringPoint);
-                            counter++;
                             currentRingPoints.add(ringPoint);
                         }
                     }
+                    int finalJ = j;
                     Collections.sort(currentRingPoints, new Comparator<Point>() {
                         public int compare(Point p1, Point p2) {
-                            double length1 = sqrt(pow(p1.x - finalAverageCenter.x, 2) + pow(p1.y - finalAverageCenter.y, 2));
-                            double length2 = sqrt(p2.x - finalAverageCenter.x, 2) + pow(p2.y - finalAverageCenter.y, 2));
+                            double length1 = sqrt(pow(p1.x - mostOuterEllipsePoints.get(finalJ).x, 2) + pow(p1.y - mostOuterEllipsePoints.get(finalJ).y, 2));
+                            double length2 = sqrt(pow(p2.x - mostOuterEllipsePoints.get(finalJ).x, 2) + pow(p2.y - mostOuterEllipsePoints.get(finalJ).y, 2));
                             return Double.compare(length1, length2);
                         }
                     });
+                  for (int k = 0; k < currentRingPoints.size(); k++) {
+                        imagePointsMap.put(currentId + k, currentRingPoints.get(k));
+                  }
+                  if (isThisMergedContour) {
+                      currentId += 2;
+                  }
+                  currentId += 2;
                 }
             }
-//            for (Integer i : imagePointsMap.keySet()) {
-//                putText(matColor, "" + i, imagePointsMap.get(i), FONT_HERSHEY_SIMPLEX, 1, COLOR_RED, 2);
-//            }
+            for (Integer i : imagePointsMap.keySet()) {
+                putText(matColor, "" + i, imagePointsMap.get(i), FONT_HERSHEY_SIMPLEX, 1, COLOR_RED, 2);
+            }
         }
 
 //        if (contoursNew.toArray().length > 6) {
