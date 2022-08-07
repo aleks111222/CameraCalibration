@@ -118,6 +118,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Vector;
 
 
@@ -1134,12 +1135,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             });
 
-            // POTEM SFIXOWAC ROTATION ZEBY [0] DLA KAZDEGO BYLO BLISKO CENTER X
-
-            List<Point> currentRingPoints = new ArrayList<>();
+            Map<Integer, Point> currentRingPointsMap = new HashMap<>();
             Map<Integer, Point> imagePointsMap = new HashMap<>();
             boolean isThisMergedContour;
-            int currentId = 0;
+            Integer currentId = 0;
+            Integer previouslyAddedId = 0;
             for (int i = 0; i < finalContours.size(); i++) {
                 isThisMergedContour = false;
                 for (int j = 0; j < mostOuterEllipsePoints.size(); j++) {
@@ -1147,7 +1147,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     double dx = mostOuterEllipsePoints.get(j).x - averageCenter.x;
                     double m = dy / dx;
                     int iterationsToSkip = 0;
-                    currentRingPoints.clear();
+                    currentRingPointsMap.clear();
+                    if (isThisMergedContour) {
+                        currentId = j * 4 + i * 6;
+                    } else {
+                        currentId = j * 2 + i * 6;
+                    }
                     for (Point ringPoint : finalContours.get(i).toArray()) {
                         if (iterationsToSkip != 0) {
                             iterationsToSkip--;
@@ -1155,29 +1160,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         }
                         if (dx > 100 && abs(m * (ringPoint.x - averageCenter.x) - (ringPoint.y - averageCenter.y)) < 2) {
                             iterationsToSkip = 30;
-                            if (!isThisMergedContour && currentRingPoints.size() > 0 &&
-                                    sqrt(pow(ringPoint.x - currentRingPoints.get(currentRingPoints.size() - 1).x, 2) +
-                                    pow(ringPoint.y - currentRingPoints.get(currentRingPoints.size() - 1).y, 2)) < 100) {
+                            if (!isThisMergedContour && currentRingPointsMap.size() > 0 &&
+                                    sqrt(pow(ringPoint.x - currentRingPointsMap.get(previouslyAddedId).x, 2) +
+                                    pow(ringPoint.y - currentRingPointsMap.get(previouslyAddedId).y, 2)) < 100) {
                                 isThisMergedContour = true;
                             }
-                            currentRingPoints.add(ringPoint);
+                            currentRingPointsMap.put(currentId, ringPoint);
+                            previouslyAddedId = currentId;
+                            currentId++;
                         }
                     }
                     int finalJ = j;
-                    Collections.sort(currentRingPoints, new Comparator<Point>() {
+                    List<Point> points = new ArrayList<>(currentRingPointsMap.values());
+                    Collections.sort(points, new Comparator<Point>() {
                         public int compare(Point p1, Point p2) {
-                            double length1 = sqrt(pow(p1.x - mostOuterEllipsePoints.get(finalJ).x, 2) + pow(p1.y - mostOuterEllipsePoints.get(finalJ).y, 2));
-                            double length2 = sqrt(pow(p2.x - mostOuterEllipsePoints.get(finalJ).x, 2) + pow(p2.y - mostOuterEllipsePoints.get(finalJ).y, 2));
+                            double length1 = sqrt(pow(p1.x - mostOuterEllipsePoints.get(finalJ).x, 2) +
+                                    pow(p1.y - mostOuterEllipsePoints.get(finalJ).y, 2));
+                            double length2 = sqrt(pow(p2.x - mostOuterEllipsePoints.get(finalJ).x, 2) +
+                                    pow(p2.y - mostOuterEllipsePoints.get(finalJ).y, 2));
                             return Double.compare(length1, length2);
                         }
                     });
-                  for (int k = 0; k < currentRingPoints.size(); k++) {
-                        imagePointsMap.put(currentId + k, currentRingPoints.get(k));
-                  }
-                  if (isThisMergedContour) {
-                      currentId += 2;
-                  }
-                  currentId += 2;
+                    for (int k = 0; k < points.size(); k++) {
+                        imagePointsMap.put((Integer) currentRingPointsMap.keySet().toArray()[k], points.get(k));
+                    }
                 }
             }
             for (Integer i : imagePointsMap.keySet()) {
