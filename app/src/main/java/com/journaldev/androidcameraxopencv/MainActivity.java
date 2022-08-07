@@ -1164,6 +1164,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                     sqrt(pow(ringPoint.x - currentRingPointsMap.get(previouslyAddedId).x, 2) +
                                     pow(ringPoint.y - currentRingPointsMap.get(previouslyAddedId).y, 2)) < 100) {
                                 isThisMergedContour = true;
+                                currentId += j * 2;
                             }
                             currentRingPointsMap.put(currentId, ringPoint);
                             previouslyAddedId = currentId;
@@ -1182,7 +1183,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         }
                     });
                     for (int k = 0; k < points.size(); k++) {
-                        imagePointsMap.put((Integer) currentRingPointsMap.keySet().toArray()[k], points.get(k));
+//                        if (isThisMergedContour) {
+//                            switch (k % 2) {
+//                                case 0 :
+//                                    imagePointsMap.put((Integer) currentRingPointsMap.keySet().toArray()[k] - j * 2 - k / 2, points.get(k));
+//                                    break;
+//                                case 1 :
+//                                    imagePointsMap.put((Integer) currentRingPointsMap.keySet().toArray()[k] + 5 - j * 2 - k / 2, points.get(k));
+//                                    break;
+//                            }
+//                        } else {
+                            imagePointsMap.put((Integer) currentRingPointsMap.keySet().toArray()[k], points.get(k));
+//                        }
                     }
                 }
             }
