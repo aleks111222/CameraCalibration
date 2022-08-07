@@ -964,8 +964,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Mat matColor = new Mat();
         Mat matGrey = new Mat();
         Mat matGreyAdapted = new Mat();
-        Mat edges = new Mat();
-        List<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
         Mat uselessHierarchy = new Mat();
         List<MatOfPoint> uselessContours = new ArrayList<>();
@@ -973,14 +971,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Utils.bitmapToMat(bitmap, matColor);
 
         cvtColor(matColor, matGrey, COLOR_BGR2GRAY);
-        //int s = matGrey.width() / 8;
-        //adaptiveThreshold(matGrey, matGreyAdapted, 255, ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, s, 7.0);
-//        org.opencv.imgproc.Imgproc.threshold(matGrey, matGreyAdapted, 125, 255, THRESH_BINARY);
 
         threshold(matGrey, matGreyAdapted, 127, 255, THRESH_BINARY);
         normalize(matGreyAdapted, matGreyAdapted, 0, 255, NORM_MINMAX);
-
-        //Canny(matGreyAdapted, matGreyAdapted, 50, 150, 3, false);
 
         findContours(matGreyAdapted, uselessContours, uselessHierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
 
@@ -1008,13 +1001,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         maskMatrix = zeros(new org.opencv.core.Size(matGreyAdapted.width() + 2, matGreyAdapted.height() + 2), CV_8U);
         floodFill(matGreyAdapted, maskMatrix, new Point(0, 0), new Scalar(255, 255));
-
-//        Mat binaryMatGreyAdapted = new Mat();
-//        findNonZero(matGreyAdapted, binaryMatGreyAdapted);
-//        MatOfPoint binaryMatOfPoint = new MatOfPoint(binaryMatGreyAdapted);
-//        MatOfPoint2f binaryMatOfPoint2f = new MatOfPoint2f(binaryMatOfPoint.toArray());
-
-        //findContours(matGreyAdapted, contours, hierarchy, RETR_TREE, CHAIN_APPROX_NONE);
 
         List<RotatedRect> ellipses = new ArrayList<>();
         List<MatOfPoint> contoursInEllipseOrder = new ArrayList<>();
@@ -1081,14 +1067,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             averageCenter = biggestEllipse.center;
 
-            // WZIAC ROTACJE PUNKTU ZERO WZGLEDEM AVERAGE CENTER I ODROTOWAC
-
-//            for (Point point : biggestEllipseContour.toArray()) {
-//                if (point.x == averageCenter.x) {
-//                    circle(matColor, point, 3, COLOR_RED, -1);
-//                }
-//            }
-
             List<Point> mostOuterEllipsePoints = new ArrayList<>();
             for (int i = 0; i < 8; i++) {
                 if (i == 0 || i == 4) {
@@ -1096,7 +1074,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 Point ringPoint = biggestEllipseContour.toArray()[i * (biggestEllipseContour.toArray().length / 8)];
                 mostOuterEllipsePoints.add(ringPoint);
-//                circle(matColor, ringPoint, 3, COLOR_RED, -1);
             }
 
             contoursNew.removeAll(contoursInBestEllipseOrder);
@@ -1207,8 +1184,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 }
             }
+
+            MatOfPoint2f bestContour2f = new MatOfPoint2f(bestContour.toArray());
+            RotatedRect rotatedRectangle = minAreaRect(bestContour2f);
+
+            double angle = rotatedRectangle.angle;
+
+
+            Mat ccTagRotationMatrix = getRotationMatrix2D(averageCenter, -angle, 1);
+
+            Map<Integer, Point> unrotatedImagePointsMap = new HashMap<>();
+
             for (Integer i : imagePointsMap.keySet()) {
-                putText(matColor, "" + i, imagePointsMap.get(i), FONT_HERSHEY_SIMPLEX, 1, COLOR_RED, 2);
+                double xPrime = ccTagRotationMatrix.get(0,0)[0] * imagePointsMap.get(i).x + ccTagRotationMatrix.get(0,1)[0] * imagePointsMap.get(i).y
+                        + ccTagRotationMatrix.get(0,2)[0];
+                double yPrime = ccTagRotationMatrix.get(1,0)[0] * imagePointsMap.get(i).x + ccTagRotationMatrix.get(1,1)[0] * imagePointsMap.get(i).y
+                        + ccTagRotationMatrix.get(1,2)[0];
+                unrotatedImagePointsMap.put(i, new Point(xPrime, yPrime));
+            }
+
+            putText(matColor, "angle = " + angle, new Point(200,200), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
+
+            for (Integer i : unrotatedImagePointsMap.keySet()) {
+                putText(matColor, "" + i, unrotatedImagePointsMap.get(i), FONT_HERSHEY_SIMPLEX, 1, COLOR_RED, 2);
             }
         }
 
@@ -1223,156 +1221,156 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //            ellipse(matColor, rectangle, COLOR_RED, 3);
 //        }
 
-        int depth;
-        Double contourId;
-        Double outerRingId = -1.0;
-
-        RotatedRect elli = new RotatedRect();
-
-        MatOfPoint2f contour2f = new MatOfPoint2f();
-        org.opencv.core.Point meanCenter;
-//        int orderId = 0;
-
-        List<Point> outerRingOfPoints = new ArrayList<>();
-        List<Point> imagePoints = new ArrayList<>();
-        List<Point> imagePointsReduced = new ArrayList<>();
-
-        List<Double> contourIds = new ArrayList<>();
-
-        for (int i = 0; i < contours.size(); i++) {
-
-            List<Double> h = new ArrayList<>();
-
-            for(double d : hierarchy.get(0, i)) {
-                h.add(d);
-            }
-
-            depth = 0;
-
-            if (h.get(2) == -1 && h.get(3) != -1) {
-
-                depth++;
-                contourId = h.get(3);
-                contours.get(i).convertTo(contour2f, CV_32F);
-
-                if(contour2f.toList().size() > 4) {
-
-                    elli = fitEllipse(contour2f);
-                    meanCenter = elli.center;
-
-                    contourIds.add(hierarchy.get(0, contourId.intValue())[2]);
-
-//                    ellipse(matColor, elli, COLOR_RED, 4);
-
-                    while(depth != 5 && hierarchy.get(0, contourId.intValue())[3] != -1) {
-
-                        contourIds.add(contourId);
-
-                        depth++;
-                        contourId = hierarchy.get(0, contourId.intValue())[3];
-                        contours.get(contourId.intValue()).convertTo(contour2f, CV_32F);
-
-                        if(hierarchy.get(0, contourId.intValue())[3] == -1) {
-                            contourIds.add(contourId);
-                        }
-
-                        if(contour2f.toList().size() > 4) {
-
-                            elli = fitEllipse(contour2f);
-
-                            Point[] contour2fArray = contour2f.toArray();
-                            //Log.d("Debug", String.valueOf(elli.angle));
-                            if(depth == 5) {
-                                outerRingId = contourId;
-//                                ellipse(matColor, elli, COLOR_RED, 4);
-                                for (int j = 0; j < 8; j++) {
-                                    Point ringPoint = contour2fArray[j * (contour2f.toList().size() / 8)];
-                                    //PointF ringPointF = new PointF((float) ringPoint.x, (float) ringPoint.y);
-//                                    circle(matColor, ringPoint, 3, COLOR_RED, -1);
-                                    outerRingOfPoints.add(ringPoint);
-                                }
-                            }
-
-                            meanCenter.x = (meanCenter.x + elli.center.x) / 2;
-                            meanCenter.y = (meanCenter.y + elli.center.y) / 2;
-                        }
-                    }
-                    //matReference = matColor;
-
-                    if(depth == 5) {
-                        contours.get(outerRingId.intValue()).convertTo(contour2f, CV_32F);
-                        //Log.d("Debug:", String.valueOf(contour2f.size()));
-                        elli = fitEllipse(contour2f);
-
-//                        ellipse(matColor, elli, COLOR_RED, 4);
-
-                        meanCenter.x = (meanCenter.x + elli.center.x) / 2;
-                        meanCenter.y = (meanCenter.y + elli.center.y) / 2;
-
-                        MatOfPoint2f contourInner2f = new MatOfPoint2f();
-
-                        for (int j = 0; j < 8; j++) {
-                            Point ringPoint = contour2f.toArray()[j * (contour2f.toList().size() / 8)];
-                            double dy = ringPoint.y - meanCenter.y;
-                            double dx = ringPoint.x - meanCenter.x;
-                            double m = dy / dx;
-                            int additionalPointsAdded = 0;
-                            for(Point point : contour2f.toArray()) {
-                                if(abs(dx) < 100 && (dy / abs(dy) == ((point.y - meanCenter.y) / abs(point.y - meanCenter.y))) && abs(point.x - meanCenter.x) < 1) {
-                                    //circle(matColor, point, 3, COLOR_RED, -1);
-                                    imagePoints.add(point);
-                                }
-                                if(dx > 100 && abs(m * (point.x - meanCenter.x) - (point.y - meanCenter.y)) < 1) {
-                                    //circle(matColor, point, 3, COLOR_RED, -1);
-                                    imagePoints.add(point);
-                                }
-                            }
-                            for(Double id : contourIds) {
-                                contours.get(id.intValue()).convertTo(contourInner2f, CV_32F);
-                                for(Point point : contourInner2f.toArray()) {
-                                    if(abs(dx) < 100 && (dy / abs(dy) == ((point.y - meanCenter.y) / abs(point.y - meanCenter.y))) && abs(point.x - meanCenter.x) < 1) {
-                                        //circle(matColor, point, 3, COLOR_RED, -1);
-                                        imagePoints.add(point);
-                                    }
-                                    if(dx > 100 && abs(m * (point.x - meanCenter.x) - (point.y - meanCenter.y)) < 1) {
-                                        //circle(matColor, point, 3, COLOR_RED, -1);
-                                        imagePoints.add(point);
-                                    } /*else if((point.x - meanCenter.x) - abs(dx) < 10) {
-                                        imagePoints.add(point);
-                                    }*/
-                                }
-                            }
-
-                        }
-//                        ellipse(matColor, elli, COLOR_RED, 4);
+//        int depth;
+//        Double contourId;
+//        Double outerRingId = -1.0;
 //
-//                        circle(matColor, meanCenter, 3, COLOR_RED, -1);
-//                        putText(matColor, String.valueOf(orderId), new org.opencv.core.Point((int) meanCenter.x + 1, (int) meanCenter.y + 1),
-//                                FONT_HERSHEY_SIMPLEX, 2, COLOR_BLUE, 3);
-
-                        for(int index = 0; index < imagePoints.size() - 1; index++) {
-                            if(!(sqrt(pow(imagePoints.get(index).x - imagePoints.get(index + 1).x, 2) + pow(imagePoints.get(index).y - imagePoints.get(index + 1).y, 2)) < 15)) {
-                                imagePointsReduced.add(imagePoints.get(index));
-                            }
-                        }
-//                        putText(matColor, String.valueOf(imagePointsReduced.size()), new org.opencv.core.Point( 100, 100),
-//                                FONT_HERSHEY_SIMPLEX, 2, COLOR_BLUE, 3);
-                        NUMBER_OF_CCTAG_IMAGE_POINTS = imagePointsReduced.size();
-                        if(NUMBER_OF_CCTAG_IMAGE_POINTS == 47 && TAKE_PHOTO == 1) {
-                            File file = new File(getFilesDir(), "Ref" + System.currentTimeMillis() + ".jpg");
-                            TAKE_PHOTO = 0;
-                            try {
-                                FileOutputStream out = new FileOutputStream(file);
-                                bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
-                                out.flush();
-                                out.close();
-                            } catch (Exception e) {
-                            }
-                        }
-                    }
-                }
-            }
-        }
+//        RotatedRect elli = new RotatedRect();
+//
+//        MatOfPoint2f contour2f = new MatOfPoint2f();
+//        org.opencv.core.Point meanCenter;
+////        int orderId = 0;
+//
+//        List<Point> outerRingOfPoints = new ArrayList<>();
+//        List<Point> imagePoints = new ArrayList<>();
+//        List<Point> imagePointsReduced = new ArrayList<>();
+//
+//        List<Double> contourIds = new ArrayList<>();
+//
+//        for (int i = 0; i < contours.size(); i++) {
+//
+//            List<Double> h = new ArrayList<>();
+//
+//            for(double d : hierarchy.get(0, i)) {
+//                h.add(d);
+//            }
+//
+//            depth = 0;
+//
+//            if (h.get(2) == -1 && h.get(3) != -1) {
+//
+//                depth++;
+//                contourId = h.get(3);
+//                contours.get(i).convertTo(contour2f, CV_32F);
+//
+//                if(contour2f.toList().size() > 4) {
+//
+//                    elli = fitEllipse(contour2f);
+//                    meanCenter = elli.center;
+//
+//                    contourIds.add(hierarchy.get(0, contourId.intValue())[2]);
+//
+////                    ellipse(matColor, elli, COLOR_RED, 4);
+//
+//                    while(depth != 5 && hierarchy.get(0, contourId.intValue())[3] != -1) {
+//
+//                        contourIds.add(contourId);
+//
+//                        depth++;
+//                        contourId = hierarchy.get(0, contourId.intValue())[3];
+//                        contours.get(contourId.intValue()).convertTo(contour2f, CV_32F);
+//
+//                        if(hierarchy.get(0, contourId.intValue())[3] == -1) {
+//                            contourIds.add(contourId);
+//                        }
+//
+//                        if(contour2f.toList().size() > 4) {
+//
+//                            elli = fitEllipse(contour2f);
+//
+//                            Point[] contour2fArray = contour2f.toArray();
+//                            //Log.d("Debug", String.valueOf(elli.angle));
+//                            if(depth == 5) {
+//                                outerRingId = contourId;
+////                                ellipse(matColor, elli, COLOR_RED, 4);
+//                                for (int j = 0; j < 8; j++) {
+//                                    Point ringPoint = contour2fArray[j * (contour2f.toList().size() / 8)];
+//                                    //PointF ringPointF = new PointF((float) ringPoint.x, (float) ringPoint.y);
+////                                    circle(matColor, ringPoint, 3, COLOR_RED, -1);
+//                                    outerRingOfPoints.add(ringPoint);
+//                                }
+//                            }
+//
+//                            meanCenter.x = (meanCenter.x + elli.center.x) / 2;
+//                            meanCenter.y = (meanCenter.y + elli.center.y) / 2;
+//                        }
+//                    }
+//                    //matReference = matColor;
+//
+//                    if(depth == 5) {
+//                        contours.get(outerRingId.intValue()).convertTo(contour2f, CV_32F);
+//                        //Log.d("Debug:", String.valueOf(contour2f.size()));
+//                        elli = fitEllipse(contour2f);
+//
+////                        ellipse(matColor, elli, COLOR_RED, 4);
+//
+//                        meanCenter.x = (meanCenter.x + elli.center.x) / 2;
+//                        meanCenter.y = (meanCenter.y + elli.center.y) / 2;
+//
+//                        MatOfPoint2f contourInner2f = new MatOfPoint2f();
+//
+//                        for (int j = 0; j < 8; j++) {
+//                            Point ringPoint = contour2f.toArray()[j * (contour2f.toList().size() / 8)];
+//                            double dy = ringPoint.y - meanCenter.y;
+//                            double dx = ringPoint.x - meanCenter.x;
+//                            double m = dy / dx;
+//                            int additionalPointsAdded = 0;
+//                            for(Point point : contour2f.toArray()) {
+//                                if(abs(dx) < 100 && (dy / abs(dy) == ((point.y - meanCenter.y) / abs(point.y - meanCenter.y))) && abs(point.x - meanCenter.x) < 1) {
+//                                    //circle(matColor, point, 3, COLOR_RED, -1);
+//                                    imagePoints.add(point);
+//                                }
+//                                if(dx > 100 && abs(m * (point.x - meanCenter.x) - (point.y - meanCenter.y)) < 1) {
+//                                    //circle(matColor, point, 3, COLOR_RED, -1);
+//                                    imagePoints.add(point);
+//                                }
+//                            }
+//                            for(Double id : contourIds) {
+//                                contours.get(id.intValue()).convertTo(contourInner2f, CV_32F);
+//                                for(Point point : contourInner2f.toArray()) {
+//                                    if(abs(dx) < 100 && (dy / abs(dy) == ((point.y - meanCenter.y) / abs(point.y - meanCenter.y))) && abs(point.x - meanCenter.x) < 1) {
+//                                        //circle(matColor, point, 3, COLOR_RED, -1);
+//                                        imagePoints.add(point);
+//                                    }
+//                                    if(dx > 100 && abs(m * (point.x - meanCenter.x) - (point.y - meanCenter.y)) < 1) {
+//                                        //circle(matColor, point, 3, COLOR_RED, -1);
+//                                        imagePoints.add(point);
+//                                    } /*else if((point.x - meanCenter.x) - abs(dx) < 10) {
+//                                        imagePoints.add(point);
+//                                    }*/
+//                                }
+//                            }
+//
+//                        }
+////                        ellipse(matColor, elli, COLOR_RED, 4);
+////
+////                        circle(matColor, meanCenter, 3, COLOR_RED, -1);
+////                        putText(matColor, String.valueOf(orderId), new org.opencv.core.Point((int) meanCenter.x + 1, (int) meanCenter.y + 1),
+////                                FONT_HERSHEY_SIMPLEX, 2, COLOR_BLUE, 3);
+//
+//                        for(int index = 0; index < imagePoints.size() - 1; index++) {
+//                            if(!(sqrt(pow(imagePoints.get(index).x - imagePoints.get(index + 1).x, 2) + pow(imagePoints.get(index).y - imagePoints.get(index + 1).y, 2)) < 15)) {
+//                                imagePointsReduced.add(imagePoints.get(index));
+//                            }
+//                        }
+////                        putText(matColor, String.valueOf(imagePointsReduced.size()), new org.opencv.core.Point( 100, 100),
+////                                FONT_HERSHEY_SIMPLEX, 2, COLOR_BLUE, 3);
+//                        NUMBER_OF_CCTAG_IMAGE_POINTS = imagePointsReduced.size();
+//                        if(NUMBER_OF_CCTAG_IMAGE_POINTS == 47 && TAKE_PHOTO == 1) {
+//                            File file = new File(getFilesDir(), "Ref" + System.currentTimeMillis() + ".jpg");
+//                            TAKE_PHOTO = 0;
+//                            try {
+//                                FileOutputStream out = new FileOutputStream(file);
+//                                bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+//                                out.flush();
+//                                out.close();
+//                            } catch (Exception e) {
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
 
         return matColor;
     }
