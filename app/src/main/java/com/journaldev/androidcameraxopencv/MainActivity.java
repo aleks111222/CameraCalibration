@@ -1163,8 +1163,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             if (!isThisMergedContour && currentRingPointsMap.size() > 0 &&
                                     sqrt(pow(ringPoint.x - currentRingPointsMap.get(previouslyAddedId).x, 2) +
                                     pow(ringPoint.y - currentRingPointsMap.get(previouslyAddedId).y, 2)) < 100) {
+                                Point prevPoint = currentRingPointsMap.get(previouslyAddedId);
+                                currentRingPointsMap.remove(previouslyAddedId);
+                                if (sqrt(pow(ringPoint.x - mostOuterEllipsePoints.get(j).x, 2) +
+                                        pow(ringPoint.y - mostOuterEllipsePoints.get(j).y, 2)) > 200) {
+                                    currentId += j * 2 + 2;
+                                    currentRingPointsMap.put(previouslyAddedId + j * 2 + 2, prevPoint);
+                                } else {
+                                    currentId += j * 2;
+                                    currentRingPointsMap.put(previouslyAddedId + j * 2, prevPoint);
+                                }
                                 isThisMergedContour = true;
-                                currentId += j * 2;
                             }
                             currentRingPointsMap.put(currentId, ringPoint);
                             previouslyAddedId = currentId;
@@ -1183,18 +1192,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         }
                     });
                     for (int k = 0; k < points.size(); k++) {
-//                        if (isThisMergedContour) {
-//                            switch (k % 2) {
-//                                case 0 :
-//                                    imagePointsMap.put((Integer) currentRingPointsMap.keySet().toArray()[k] - j * 2 - k / 2, points.get(k));
-//                                    break;
-//                                case 1 :
-//                                    imagePointsMap.put((Integer) currentRingPointsMap.keySet().toArray()[k] + 5 - j * 2 - k / 2, points.get(k));
-//                                    break;
-//                            }
-//                        } else {
+                        if (isThisMergedContour) {
+                            switch (k % 2) {
+                                case 0 :
+                                    imagePointsMap.put((Integer) currentRingPointsMap.keySet().toArray()[k] - j * 2 - k / 2, points.get(k));
+                                    break;
+                                case 1 :
+                                    imagePointsMap.put((Integer) currentRingPointsMap.keySet().toArray()[k] + 5 - j * 2 - k / 2, points.get(k));
+                                    break;
+                            }
+                        } else {
                             imagePointsMap.put((Integer) currentRingPointsMap.keySet().toArray()[k], points.get(k));
-//                        }
+                        }
                     }
                 }
             }
