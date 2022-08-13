@@ -143,7 +143,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     org.opencv.core.Size circleGridSize = new org.opencv.core.Size(6,8);
     boolean CAN_TAKE_PHOTO = false;
 
-    String currentImageProcessing = "CCTAG";
+    String currentImageProcessing = "CHESSBOARD";
 
     ImageCapture imageCapture;
     ImageAnalysis imageAnalysis;
@@ -746,32 +746,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         Mat matColor = new Mat();
         Mat matGrey = new Mat();
-//        Mat matGreyDownscaled = new Mat();
-//        MatOfPoint2f corners = new MatOfPoint2f();
-//        boolean result;
         Utils.bitmapToMat(bitmap, matColor);
         cvtColor(matColor, matGrey, COLOR_BGR2GRAY);
-//        resize(matGrey, matGrey, new org.opencv.core.Size(), 0.25, 0.25, INTER_NEAREST);
-//        result = findChessboardCorners(matGreyDownscaled, chessboardSize, corners);
-//        multiply(corners, new Scalar(4.0, 4.0), corners);
-//        if(result) {
-//            cornerSubPix(matGrey, corners, new org.opencv.core.Size(11, 11),
-//                    new org.opencv.core.Size(-1, -1),
-//                    new TermCriteria(EPS + MAX_ITER, 30, 0.001));
-//        }
-//        Mat gaussBlurred = new Mat();
-//        GaussianBlur(matColor, gaussBlurred, new org.opencv.core.Size(5,5),0);
-//        Mat maskMatrix = zeros(new org.opencv.core.Size(matGrey.width(), matGrey.height()), CV_8U);
-//        Mat kernelMatrix = getStructuringElement(MORPH_ELLIPSE, new org.opencv.core.Size(11,11));
-//        Mat morphedMat = new Mat(); // close
-//        morphologyEx(matGrey, morphedMat, MORPH_CLOSE, kernelMatrix);
-//        Mat dividedMatrix = new Mat();
-//        divide(matGrey, morphedMat, dividedMatrix);
-//        normalize(dividedMatrix, dividedMatrix,0,255, NORM_MINMAX);
-//        Mat matColorProcessed = new Mat();
-//        cvtColor(dividedMatrix, matColorProcessed, COLOR_GRAY2BGR);
-//
-//        adaptiveThreshold(dividedMatrix, dividedMatrix,255,0,1,19,2);
         threshold(matGrey, matGrey,127,255, THRESH_BINARY);
         normalize(matGrey, matGrey, 0, 255, NORM_MINMAX);
         List<MatOfPoint> contours = new ArrayList<>();
@@ -795,26 +771,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         Mat maskMatrix = zeros(new org.opencv.core.Size(matGrey.width(), matGrey.height()), CV_8U);
 
-        drawContours(maskMatrix, bestContourList, 0, new Scalar(255.0, 255.0, 255.0, 255.0), -1);
-        drawContours(maskMatrix, bestContourList, 0, new Scalar(0.0, 0.0, 0.0, 0.0), 2);
-
-        Core.bitwise_and(matGrey, maskMatrix, matGrey);
+        if (bestContourList.size() > 0 && bestContourList.get(0) != null) {
+            drawContours(maskMatrix, bestContourList, 0, new Scalar(255.0, 255.0, 255.0, 255.0), -1);
+            drawContours(maskMatrix, bestContourList, 0, new Scalar(0.0, 0.0, 0.0, 0.0), 2);
+            Core.bitwise_and(matGrey, maskMatrix, matGrey);
+        }
 
         maskMatrix = zeros(new org.opencv.core.Size(matGrey.width() + 2, matGrey.height() + 2), CV_8U);
         floodFill(matGrey, maskMatrix, new Point(0,0), new Scalar(255, 255));
 
-        Canny(matGrey, matGrey, 50, 150, 3, false); // co to ten l2gradient?
-//        Mat kernel = ones(3,3, CV_8U);
-//        dilate(matGrey, matGrey, kernel);
-//        kernel = ones(5,5, CV_8U);
-//        erode(matGrey, matGrey, kernel);
+        Canny(matGrey, matGrey, 30, 150, 3, false); // co to ten l2gradient?
 
         MatOfPoint corners = new MatOfPoint();
 
-//        List<Point> cornersReduced = new ArrayList<>();
-
         Mat emptyMat = new Mat();
-        goodFeaturesToTrack(matGrey, corners, (int) (chessboardSize.width * chessboardSize.height), 0.2, 50, emptyMat, 3, true, 0.04);
+        goodFeaturesToTrack(matGrey, corners, (int) (chessboardSize.width * chessboardSize.height), 0.01, 10, emptyMat, 3, false, 0.04);
 
         class Pair<L,R> {
             private L l;
@@ -834,14 +805,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         double angle = rotatedRectangle.angle;
 
-        if (rotatedRectangle.size.width < rotatedRectangle.size.height) {
-            angle -= 90;
-        }
+        angle -= 90;
 
         Mat linesMat = new Mat();
         List<Pair<Double, Double>> lines = new ArrayList<>();
-
-//        HoughLinesP(matGrey, linesMat, 1, PI / 180, 100, 100,80);
 
         HoughLines(matGrey, linesMat,1,CV_PI / 180,100);
 
@@ -933,7 +900,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
 
         Mat cornerMatrix = zeros(chessboardSize, CV_64FC2);
-        if(orderedPoints.size() <= chessboardSize.width * chessboardSize.height) {
+        if(orderedPoints.size() <= chessboardSize.width * chessboardSize.height
+        && orderedPoints.size() > 3) {
             int currentRow = 0;
             int currentColumn = 0;
             double currentY = chessboardRotationMatrix.get(1, 0)[0] * orderedPoints.get(0).x + chessboardRotationMatrix.get(1, 1)[0] * orderedPoints.get(0).y + chessboardRotationMatrix.get(1, 2)[0];;
@@ -949,10 +917,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
 
-//        for(Point corner : orderedPoints) {
-//            drawMarker(matColor, corner, COLOR_RED, 1, 2, 2, 1);
-//            putText(matColor, String.valueOf(orderedPoints.indexOf(corner)), corner, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-//        }
+        for(Point corner : corners.toArray()) {
+            drawMarker(matColor, corner, COLOR_RED, 1, 2, 2, 1);
+            putText(matColor, String.valueOf(orderedPoints.indexOf(corner)), corner, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+        }
 
         return matColor;
     }
