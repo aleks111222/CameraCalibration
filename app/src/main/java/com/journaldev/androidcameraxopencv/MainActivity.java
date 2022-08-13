@@ -781,6 +781,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         floodFill(matGrey, maskMatrix, new Point(0,0), new Scalar(255, 255));
 
         Canny(matGrey, matGrey, 30, 150, 3, false); // co to ten l2gradient?
+        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new org.opencv.core.Size(2, 2));
+        Imgproc.dilate(matGrey, matGrey, kernel);
 
         MatOfPoint corners = new MatOfPoint();
 
@@ -805,8 +807,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         double angle = rotatedRectangle.angle;
 
-        angle -= 90;
-
         Mat linesMat = new Mat();
         List<Pair<Double, Double>> lines = new ArrayList<>();
 
@@ -818,15 +818,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             double theta = linesMat.get(i, 0)[1];
             isRedundant = false;
             for (Pair l : lines) {
-                if (abs((double) l.getL() - rho) < 50 && abs((double) l.getR() * 180 / CV_PI - theta * 180 / CV_PI) < 15) {
+                Log.d("Debug", "" + theta * 180 / CV_PI);
+                if (abs((double) l.getL() - rho) < 20 && (abs((double) l.getR() * 180 / CV_PI - theta * 180 / CV_PI) < 30
+                        || abs((double) l.getR() * 180 / CV_PI - (180 - theta * 180 / CV_PI)) < 30)) {
                     isRedundant = true;
                     break;
                 }
             }
-            if (!isRedundant && (abs(angle - theta * 180 / CV_PI) < 5 || abs(angle + 90 - theta * 180 / CV_PI) < 5
-            ||  abs(angle + 180 - theta * 180 / CV_PI) < 3)) {
+            if (!isRedundant) {
                 lines.add(new Pair<>(rho, theta));
             }
+//            if (!isRedundant && (abs(angle - theta * 180 / CV_PI) < 5 || abs(angle + 90 - theta * 180 / CV_PI) < 5
+//            ||  abs(angle + 180 - theta * 180 / CV_PI) < 3)) {
+//                lines.add(new Pair<>(rho, theta));
+//            }
         }
 
 //        for (Pair p : lines) {
@@ -917,7 +922,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
 
-        for(Point corner : corners.toArray()) {
+        for(Point corner : orderedPoints) {
             drawMarker(matColor, corner, COLOR_RED, 1, 2, 2, 1);
             putText(matColor, String.valueOf(orderedPoints.indexOf(corner)), corner, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
         }
