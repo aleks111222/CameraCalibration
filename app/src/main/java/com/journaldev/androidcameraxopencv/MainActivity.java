@@ -143,7 +143,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     org.opencv.core.Size circleGridSize = new org.opencv.core.Size(6,8);
     boolean CAN_TAKE_PHOTO = false;
 
-    String currentImageProcessing = "CHESSBOARD";
+    String currentImageProcessing = "ASSYMETRIC_CIRCLES";
 
     ImageCapture imageCapture;
     ImageAnalysis imageAnalysis;
@@ -306,7 +306,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                         final Bitmap bitmap = textureView.getBitmap();
 
-                        //final Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.sss);
+//                        final Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.template_photo);
 
                         if (bitmap == null)
                             return;
@@ -603,7 +603,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         cvtColor(matColor, matGrey, COLOR_BGR2GRAY);
 
         threshold(matGrey, matGrey,127,255, THRESH_BINARY);
-        normalize(matGrey, matGrey, 0, 255, NORM_MINMAX);
+//        normalize(matGrey, matGrey, 0, 255, NORM_MINMAX);
 
         List<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
@@ -659,10 +659,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         RotatedRect rotatedRectangle = minAreaRect(bestContour2f);
 
         double angle = rotatedRectangle.angle;
-
-        if (rotatedRectangle.size.width < rotatedRectangle.size.height) {
-            angle -= 90;
-        }
 
         Mat chessboardRotationMatrix = getRotationMatrix2D(rotatedRectangle.center, angle, 1);
 
@@ -734,22 +730,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //            }
 //        }
 
-//        for (KeyPoint keyPoint : orderedPoints) {
-//            drawMarker(matColor, keyPoint.pt, COLOR_RED, 1, 2, 2, 1);
-//            putText(matColor, String.valueOf(orderedPoints.indexOf(keyPoint)), keyPoint.pt, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-//        }
+        for (KeyPoint keyPoint : orderedPoints) {
+            drawMarker(matColor, keyPoint.pt, COLOR_RED, 1, 2, 2, 1);
+            putText(matColor, String.valueOf(orderedPoints.indexOf(keyPoint)), keyPoint.pt, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+        }
 
         return matColor;
     }
 
     private Mat getChessboardCorners(Bitmap bitmap) {
 
+        Mat matReference = new Mat();
+
         Mat matColor = new Mat();
         Mat matGrey = new Mat();
         Utils.bitmapToMat(bitmap, matColor);
         cvtColor(matColor, matGrey, COLOR_BGR2GRAY);
         threshold(matGrey, matGrey,127,255, THRESH_BINARY);
-        normalize(matGrey, matGrey, 0, 255, NORM_MINMAX);
+//        normalize(matGrey, matGrey, 0, 255, NORM_MINMAX);
+
         List<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
         findContours(matGrey, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
@@ -778,16 +777,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         maskMatrix = zeros(new org.opencv.core.Size(matGrey.width() + 2, matGrey.height() + 2), CV_8U);
-        floodFill(matGrey, maskMatrix, new Point(0,0), new Scalar(255, 255));
 
-        Canny(matGrey, matGrey, 30, 150, 3, false); // co to ten l2gradient?
-        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new org.opencv.core.Size(2, 2));
-        Imgproc.dilate(matGrey, matGrey, kernel);
+        floodFill(matGrey, maskMatrix, new Point(0,0), new Scalar(255, 255));
 
         MatOfPoint corners = new MatOfPoint();
 
         Mat emptyMat = new Mat();
+
+        Canny(matGrey, matGrey, 30, 150, 3, false);
+
         goodFeaturesToTrack(matGrey, corners, (int) (chessboardSize.width * chessboardSize.height), 0.01, 10, emptyMat, 3, false, 0.04);
+
+        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new org.opencv.core.Size(2, 2));
+        Imgproc.dilate(matGrey, matGrey, kernel);
 
         class Pair<L,R> {
             private L l;
@@ -833,7 +835,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                lines.add(new Pair<>(rho, theta));
 //            }
         }
-
+//
 //        for (Pair p : lines) {
 //            double rho = (double) p.getL();
 //            double theta = (double) p.getR();
@@ -878,20 +880,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             }
         }
-
-//        for (Point p : orderedPoints) {
-//            drawMarker(matColor, p, COLOR_RED, 1, 2, 2, 1);
-//        }
 //
-//        Log.d("Debug", "" + orderedPoints.size());
-
-//        for(int index = 0; index < corners.toList().size() - 1; index++) {
-//            if(!(sqrt(pow(corners.toArray()[index].x - corners.toArray()[index + 1].x, 2) + pow(corners.toArray()[index].y - corners.toArray()[index + 1].y, 2)) < 15)) {
-//                cornersReduced.add(corners.toArray()[index]);
-//            }
-//        }
-
-        putText(matColor, "angle = " + angle, new Point(200,200), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
+////        for (Point p : orderedPoints) {
+////            drawMarker(matColor, p, COLOR_RED, 1, 2, 2, 1);
+////        }
+////
+////        Log.d("Debug", "" + orderedPoints.size());
+//
+////        for(int index = 0; index < corners.toList().size() - 1; index++) {
+////            if(!(sqrt(pow(corners.toArray()[index].x - corners.toArray()[index + 1].x, 2) + pow(corners.toArray()[index].y - corners.toArray()[index + 1].y, 2)) < 15)) {
+////                cornersReduced.add(corners.toArray()[index]);
+////            }
+////        }
+//
+//        putText(matColor, "angle = " + angle, new Point(200,200), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
         Mat chessboardRotationMatrix = getRotationMatrix2D(rotatedRectangle.center, angle, 1);
 
         Collections.sort(orderedPoints, new Comparator<Point>() {
@@ -946,7 +948,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         cvtColor(matColor, matGrey, COLOR_BGR2GRAY);
 
         threshold(matGrey, matGreyAdapted, 127, 255, THRESH_BINARY);
-        normalize(matGreyAdapted, matGreyAdapted, 0, 255, NORM_MINMAX);
+        //normalize(matGreyAdapted, matGreyAdapted, 0, 255, NORM_MINMAX);
 
         findContours(matGreyAdapted, uselessContours, uselessHierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
 
@@ -1019,11 +1021,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             ellipsesWithCommonCenters.clear();
             contoursTemp.clear();
         }
-
+//
 //        for (int i = 0; i < ellipsesWithCommonCentersBest.size(); i++) {
-//            ellipse(matColor, ellipsesWithCommonCentersBest.get(0), COLOR_RED, 2);
+//            ellipse(matColor, ellipsesWithCommonCentersBest.get(i), COLOR_RED, 2);
 //        }
-
+//
         if (ellipsesWithCommonCentersBest.size() > 1) {
             Point averageCenter = new Point();
 
@@ -1037,7 +1039,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     biggestEllipseContour = contoursInBestEllipseOrder.get(i);
                 }
             }
-
             averageCenter = biggestEllipse.center;
 
             List<Point> mostOuterEllipsePoints = new ArrayList<>();
@@ -1046,9 +1047,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     continue;
                 }
                 Point ringPoint = biggestEllipseContour.toArray()[i * (biggestEllipseContour.toArray().length / 8)];
+//                circle(matColor, ringPoint, 5, COLOR_RED, -1);
                 mostOuterEllipsePoints.add(ringPoint);
             }
-
+//
             contoursNew.removeAll(contoursInBestEllipseOrder);
             List<Point> allPoints = new ArrayList<>();
             MatOfPoint mergedMat = new MatOfPoint();
@@ -1075,7 +1077,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     finalContours.add(mergedMat);
                 }
             }
-
+//
             Point finalAverageCenter = averageCenter;
             Collections.sort(finalContours, new Comparator<MatOfPoint>() {
                 public int compare(MatOfPoint m1, MatOfPoint m2) {
@@ -1084,7 +1086,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     return Double.compare(length1, length2);
                 }
             });
-
+//
             Map<Integer, Point> currentRingPointsMap = new HashMap<>();
             Map<Integer, Point> imagePointsMap = new HashMap<>();
             boolean isThisMergedContour;
@@ -1157,7 +1159,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 }
             }
-
+//
             MatOfPoint2f bestContour2f = new MatOfPoint2f(bestContour.toArray());
             RotatedRect rotatedRectangle = minAreaRect(bestContour2f);
 
@@ -1176,10 +1178,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 unrotatedImagePointsMap.put(i, new Point(xPrime, yPrime));
             }
 
-            putText(matColor, "angle = " + angle, new Point(200,200), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
-
+//            putText(matColor, "angle = " + angle, new Point(200,200), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
+//
             for (Integer i : unrotatedImagePointsMap.keySet()) {
-                putText(matColor, "" + i, unrotatedImagePointsMap.get(i), FONT_HERSHEY_SIMPLEX, 1, COLOR_RED, 2);
+                putText(matColor, "" + i, unrotatedImagePointsMap.get(i), FONT_HERSHEY_SIMPLEX, 0.8, COLOR_RED, 1);
             }
         }
 

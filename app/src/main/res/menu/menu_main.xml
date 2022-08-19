@@ -7,28 +7,37 @@
 
     <item
         android:id="@+id/chessboard"
-        android:title="chessboard"
+        android:checkable="true"
+        android:title="Chessboard"
         app:showAsAction="never" />
 
     <item
         android:id="@+id/ccTag"
+        android:checkable="true"
         android:title="ccTag"
         app:showAsAction="never" />
 
     <item
         android:id="@+id/assymetricCircleGrid"
-        android:title="assymetricCircles"
-        app:showAsAction="never"/>
+        android:checkable="true"
+        android:title="Asymmetric Circles"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/localCalibration"
+        android:checkable="true"
+        android:title="Enable Local Calibration"
+        app:showAsAction="never" />
 
     <item
         android:id="@+id/calibrate"
-        android:title="calibrate"
+        android:title="Calibrate"
         app:showAsAction="always"
         android:icon="@drawable/ic_camera"/>
 
     <item
         android:id="@+id/clear"
-        android:title="clear"
-        app:showAsAction="always"
-        android:icon="@drawable/ic_close"/>
+        android:icon="@android:drawable/ic_menu_delete"
+        android:title="Clear"
+        app:showAsAction="always" />
 </menu>
