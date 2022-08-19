@@ -549,7 +549,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     row.col(1).setTo(new Scalar(photoImagePoints2f.toList().get(y).y));
                     row.col(2).setTo(new Scalar(0));
                     photoImagePoints.push_back(row);
-            }*/
+            }*/s
                 Log.d("Debug:", "" + photoImagePoints2f.size() + fileDir.listFiles()[i].getPath());
                 photosImagePoints.add(photoImagePoints2f);
             }
