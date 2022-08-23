@@ -12,6 +12,7 @@ import static org.opencv.core.Core.minMaxLoc;
 import static org.opencv.core.Core.multiply;
 import static org.opencv.core.Core.norm;
 import static org.opencv.core.Core.normalize;
+import static org.opencv.core.Core.perspectiveTransform;
 import static org.opencv.core.CvType.CV_32F;
 import static org.opencv.core.CvType.CV_64F;
 import static org.opencv.core.CvType.CV_64FC2;
@@ -959,20 +960,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             double width2 = sqrt(pow(bl.x - br.x, 2) + pow(bl.y - br.y, 2));
             double width = max(width1, width2);
 
-            Mat matrix1 = zeros(new org.opencv.core.Size(2,2), CV_64FC2);
-            matrix1.put(0,0, tl.x, tl.y);
-            matrix1.put(0,1, tr.x, tr.y);
-            matrix1.put(1,0, bl.x, bl.y);
-            matrix1.put(1,1, br.x, br.y);
+            MatOfPoint2f matrix1 = new MatOfPoint2f(tl, tr, bl, br);
+            MatOfPoint2f matrix2 = new MatOfPoint2f(new Point(0, height - 1), new Point(width - 1, height - 1), new Point(0, 0), new Point(0, width - 1));
 
-            Mat matrix2 = zeros(new org.opencv.core.Size(2,2), CV_64FC2);
-            matrix2.put(0,0, 0, height);
-            matrix2.put(0,1, width, height);
-            matrix2.put(1,0, 0, 0);
-            matrix2.put(1,1, 0, width);
+            Mat warpMat = getPerspectiveTransform(matrix1, matrix2);
 
+            MatOfPoint2f unrotatedCorners = new MatOfPoint2f(corners.toArray());
+            perspectiveTransform(unrotatedCorners, unrotatedCorners, warpMat.inv());
 
-            getPerspectiveTransform(matrix1, matrix2);
+            Log.d("Debug", "" + unrotatedCorners.size());
+
+            for(Point p : unrotatedCorners.toArray()) {
+                circle(matColor, p, 4, COLOR_RED, -1);
+            }
         }
 
 
