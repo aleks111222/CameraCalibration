@@ -143,7 +143,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     org.opencv.core.Size circleGridSize = new org.opencv.core.Size(6,8);
     boolean CAN_TAKE_PHOTO = false;
 
-    String currentImageProcessing = "ASSYMETRIC_CIRCLES";
+    String currentImageProcessing = "CHESSBOARD";
 
     ImageCapture imageCapture;
     ImageAnalysis imageAnalysis;
@@ -812,29 +812,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Mat linesMat = new Mat();
         List<Pair<Double, Double>> lines = new ArrayList<>();
 
-        HoughLines(matGrey, linesMat,1,CV_PI / 180,100);
-
-        boolean isRedundant;
-        for(int i = 0; i < linesMat.rows(); i++) {
-            double rho = linesMat.get(i, 0)[0];
-            double theta = linesMat.get(i, 0)[1];
-            isRedundant = false;
-            for (Pair l : lines) {
-                Log.d("Debug", "" + theta * 180 / CV_PI);
-                if (abs((double) l.getL() - rho) < 20 && (abs((double) l.getR() * 180 / CV_PI - theta * 180 / CV_PI) < 30
-                        || abs((double) l.getR() * 180 / CV_PI - (180 - theta * 180 / CV_PI)) < 30)) {
-                    isRedundant = true;
-                    break;
-                }
-            }
-            if (!isRedundant) {
-                lines.add(new Pair<>(rho, theta));
-            }
-//            if (!isRedundant && (abs(angle - theta * 180 / CV_PI) < 5 || abs(angle + 90 - theta * 180 / CV_PI) < 5
-//            ||  abs(angle + 180 - theta * 180 / CV_PI) < 3)) {
+//        HoughLines(matGrey, linesMat,1,CV_PI / 180,100);
+//
+//        boolean isRedundant;
+//        for(int i = 0; i < linesMat.rows(); i++) {
+//            double rho = linesMat.get(i, 0)[0];
+//            double theta = linesMat.get(i, 0)[1];
+//            isRedundant = false;
+//            for (Pair l : lines) {
+//                Log.d("Debug", "" + theta * 180 / CV_PI);
+//                if (abs((double) l.getL() - rho) < 15 && (abs((double) l.getR() * 180 / CV_PI - theta * 180 / CV_PI) < 20
+//                        || abs((double) l.getR() * 180 / CV_PI - (180 - theta * 180 / CV_PI)) < 20)) {
+//                    isRedundant = true;
+//                    break;
+//                }
+//            }
+//            if (!isRedundant && (theta * 180 / CV_PI - angle) > 30) {
 //                lines.add(new Pair<>(rho, theta));
 //            }
-        }
+////            if (!isRedundant && (abs(angle - theta * 180 / CV_PI) < 5 || abs(angle + 90 - theta * 180 / CV_PI) < 5
+////            ||  abs(angle + 180 - theta * 180 / CV_PI) < 3)) {
+////                lines.add(new Pair<>(rho, theta));
+////            }
+//        }
 //
 //        for (Pair p : lines) {
 //            double rho = (double) p.getL();
@@ -872,14 +872,89 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         List<Point> orderedPoints = new ArrayList<>();
 
-        for (Point corner : corners.toArray()) {
-            for (Point gridPoint : intersectionPoints) {
-                if (abs(corner.x - gridPoint.x) < 10 && abs(corner.y - gridPoint.y) < 10) {
-                    orderedPoints.add(corner);
-                    break;
+//        for (Point corner : corners.toArray()) {
+//            for (Point gridPoint : intersectionPoints) {
+//                if (abs(corner.x - gridPoint.x) < 30 && abs(corner.y - gridPoint.y) < 30) {
+//                    orderedPoints.add(corner);
+//                    break;
+//                }
+//            }
+//        }
+
+        orderedPoints.addAll(corners.toList());
+//        List<MatOfPoint> cannyContours = new ArrayList<>();
+//
+//        findContours(matGrey, cannyContours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+//
+//        if (cannyContours.size() == 1) {
+//            MatOfPoint2f cannyContour2f = new MatOfPoint2f(cannyContours.get(0).toArray());
+//            RotatedRect rotatedRectangleCanny = minAreaRect(cannyContour2f);
+//
+//            circle(matColor, rotatedRectangleCanny.center, 2, COLOR_RED);
+//        }
+
+        Point center = new Point();
+        for (Point point : orderedPoints) {
+            center.x += point.x;
+            center.y += point.y;
+        }
+        center.x /= orderedPoints.size();
+        center.y /= orderedPoints.size();
+
+        Collections.sort(orderedPoints, new Comparator<Point>() {
+            public int compare(Point x1, Point x2) {
+                double distance1 = sqrt(pow(x1.x - center.x, 2) + pow(x1.y - center.y, 2));
+                double distance2 = sqrt(pow(x2.x - center.x, 2) + pow(x2.y - center.y, 2));
+                return Double.compare(distance2, distance1);
+            }
+        });
+
+        List<Point> extremePoints = new ArrayList<>();
+
+        if (orderedPoints.size() > 3) {
+            extremePoints.add(orderedPoints.get(0));
+            extremePoints.add(orderedPoints.get(1));
+            extremePoints.add(orderedPoints.get(2));
+            extremePoints.add(orderedPoints.get(3));
+
+            circle(matColor, center, 2, COLOR_RED);
+
+            List<Point> top = new ArrayList<>();
+            List<Point> bottom = new ArrayList<>();
+
+            for (Point point : extremePoints) {
+                if (point.y < center.y) {
+                    top.add(point);
+                } else {
+                    bottom.add(point);
                 }
             }
+
+            Point tl;
+            Point tr;
+            Point bl;
+            Point br;
+
+            if (top.get(0).x < top.get(1).x) {
+                tl = top.get(0);
+                tr = top.get(1);
+            } else {
+                tl = top.get(1);
+                tr = top.get(0);
+            }
+
+            if (bottom.get(0).x < bottom.get(1).x) {
+                bl = bottom.get(0);
+                br = bottom.get(1);
+            } else {
+                bl = bottom.get(1);
+                br = bottom.get(0);
+            }
+//            circle(matColor, tl, 4, COLOR_RED, -1);
+//            circle(matColor, br, 4, COLOR_RED, -1);
         }
+
+
 //
 ////        for (Point p : orderedPoints) {
 ////            drawMarker(matColor, p, COLOR_RED, 1, 2, 2, 1);
@@ -893,7 +968,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 ////            }
 ////        }
 //
-//        putText(matColor, "angle = " + angle, new Point(200,200), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
+        putText(matColor, "angle = " + angle, new Point(100,100), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
+        putText(matColor, "corners = " + orderedPoints.size(), new Point(200,200), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
         Mat chessboardRotationMatrix = getRotationMatrix2D(rotatedRectangle.center, angle, 1);
 
         Collections.sort(orderedPoints, new Comparator<Point>() {
@@ -902,32 +978,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 double y1Prime = chessboardRotationMatrix.get(1,0)[0] * x1.x + chessboardRotationMatrix.get(1,1)[0] * x1.y + chessboardRotationMatrix.get(1,2)[0];
                 double x2Prime = chessboardRotationMatrix.get(0,0)[0] * x2.x + chessboardRotationMatrix.get(0,1)[0] * x2.y + chessboardRotationMatrix.get(0,2)[0];
                 double y2Prime = chessboardRotationMatrix.get(1,0)[0] * x2.x + chessboardRotationMatrix.get(1,1)[0] * x2.y + chessboardRotationMatrix.get(1,2)[0];
-                return Double.compare(100 * y1Prime + 10 * x1Prime, 100 * y2Prime + 10 * x2Prime);
+                if (abs(y2Prime - y1Prime) < 15) {
+                    return Double.compare(x1Prime, x2Prime);
+                }
+                return Double.compare(y1Prime, y2Prime);
             }
         });
 
-        Mat cornerMatrix = zeros(chessboardSize, CV_64FC2);
-        if(orderedPoints.size() <= chessboardSize.width * chessboardSize.height
-        && orderedPoints.size() > 3) {
-            int currentRow = 0;
-            int currentColumn = 0;
-            double currentY = chessboardRotationMatrix.get(1, 0)[0] * orderedPoints.get(0).x + chessboardRotationMatrix.get(1, 1)[0] * orderedPoints.get(0).y + chessboardRotationMatrix.get(1, 2)[0];;
-            for (Point corner : orderedPoints) {
-                double yPrime = chessboardRotationMatrix.get(1, 0)[0] * corner.x + chessboardRotationMatrix.get(1, 1)[0] * corner.y + chessboardRotationMatrix.get(1, 2)[0];
-                if(abs(yPrime - currentY) > 20) {
-                    currentRow++;
-                    currentColumn = 0;
-                }
-                cornerMatrix.put(currentRow, currentColumn, corner.x, corner.y);
-                currentColumn++;
-                currentY = yPrime;
-            }
-        }
+//        Mat cornerMatrix = zeros(chessboardSize, CV_64FC2);
+//        if(orderedPoints.size() <= chessboardSize.width * chessboardSize.height
+//        && orderedPoints.size() > 3) {
+//            int currentRow = 0;
+//            int currentColumn = 0;
+//            double currentY = chessboardRotationMatrix.get(1, 0)[0] * orderedPoints.get(0).x + chessboardRotationMatrix.get(1, 1)[0] * orderedPoints.get(0).y + chessboardRotationMatrix.get(1, 2)[0];;
+//            for (Point corner : orderedPoints) {
+//                double yPrime = chessboardRotationMatrix.get(1, 0)[0] * corner.x + chessboardRotationMatrix.get(1, 1)[0] * corner.y + chessboardRotationMatrix.get(1, 2)[0];
+//                if(abs(yPrime - currentY) > 20) {
+//                    currentRow++;
+//                    currentColumn = 0;
+//                }
+//                cornerMatrix.put(currentRow, currentColumn, corner.x, corner.y);
+//                currentColumn++;
+//                currentY = yPrime;
+//            }
+//        }
 
-        for(Point corner : orderedPoints) {
-            drawMarker(matColor, corner, COLOR_RED, 1, 2, 2, 1);
-            putText(matColor, String.valueOf(orderedPoints.indexOf(corner)), corner, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-        }
+//        for(Point corner : orderedPoints) {
+//            drawMarker(matColor, corner, COLOR_RED, 1, 2, 2, 1);
+//            putText(matColor, String.valueOf(orderedPoints.indexOf(corner)), corner, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+//        }
 
         return matColor;
     }
