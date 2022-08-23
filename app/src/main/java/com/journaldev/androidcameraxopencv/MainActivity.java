@@ -950,8 +950,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 bl = bottom.get(1);
                 br = bottom.get(0);
             }
-//            circle(matColor, tl, 4, COLOR_RED, -1);
-//            circle(matColor, br, 4, COLOR_RED, -1);
+
+            double height1 = sqrt(pow(tl.x - bl.x, 2) + pow(tl.y - bl.y, 2));
+            double height2 = sqrt(pow(tr.x - br.x, 2) + pow(tr.y - br.y, 2));
+            double height = max(height1, height2);
+
+            double width1 = sqrt(pow(tl.x - tr.x, 2) + pow(tl.y - tr.y, 2));
+            double width2 = sqrt(pow(bl.x - br.x, 2) + pow(bl.y - br.y, 2));
+            double width = max(width1, width2);
+
+            Mat matrix1 = zeros(new org.opencv.core.Size(2,2), CV_64FC2);
+            matrix1.put(0,0, tl.x, tl.y);
+            matrix1.put(0,1, tr.x, tr.y);
+            matrix1.put(1,0, bl.x, bl.y);
+            matrix1.put(1,1, br.x, br.y);
+
+            Mat matrix2 = zeros(new org.opencv.core.Size(2,2), CV_64FC2);
+            matrix2.put(0,0, 0, height);
+            matrix2.put(0,1, width, height);
+            matrix2.put(1,0, 0, 0);
+            matrix2.put(1,1, 0, width);
+
+
+            getPerspectiveTransform(matrix1, matrix2);
         }
 
 
