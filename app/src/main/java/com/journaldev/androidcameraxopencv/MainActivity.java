@@ -814,85 +814,85 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         List<Pair<Double, Double>> lines = new ArrayList<>();
 //        List<Pair<Double, Double>> extremeLines = new ArrayList<>();
 
-        HoughLines(matGrey, linesMat,1,CV_PI / 180,100);
-
-        boolean isRedundant;
-        for(int i = 0; i < linesMat.rows(); i++) {
-            double rho = linesMat.get(i, 0)[0];
-            double theta = linesMat.get(i, 0)[1];
-            isRedundant = false;
-            for (Pair l : lines) {
-//                Log.d("Debug", "" + theta * 180 / CV_PI);
-                if (abs((double) l.getL() - rho) < 15 && (abs((double) l.getR() * 180 / CV_PI - theta * 180 / CV_PI) < 20
-                        || abs((double) l.getR() * 180 / CV_PI - (180 - theta * 180 / CV_PI)) < 20)) {
-                    isRedundant = true;
-                    break;
-                }
-            }
-            if (!isRedundant && (theta * 180 / CV_PI - angle) > 30) {
-                lines.add(new Pair<>(rho, theta));
-            }
-//            if (!isRedundant && (abs(angle - theta * 180 / CV_PI) < 5 || abs(angle + 90 - theta * 180 / CV_PI) < 5
-//            ||  abs(angle + 180 - theta * 180 / CV_PI) < 3)) {
+//        HoughLines(matGrey, linesMat,1,CV_PI / 180,100);
+//
+//        boolean isRedundant;
+//        for(int i = 0; i < linesMat.rows(); i++) {
+//            double rho = linesMat.get(i, 0)[0];
+//            double theta = linesMat.get(i, 0)[1];
+//            isRedundant = false;
+//            for (Pair l : lines) {
+////                Log.d("Debug", "" + theta * 180 / CV_PI);
+//                if (abs((double) l.getL() - rho) < 15 && (abs((double) l.getR() * 180 / CV_PI - theta * 180 / CV_PI) < 20
+//                        || abs((double) l.getR() * 180 / CV_PI - (180 - theta * 180 / CV_PI)) < 20)) {
+//                    isRedundant = true;
+//                    break;
+//                }
+//            }
+//            if (!isRedundant && (theta * 180 / CV_PI - angle) > 30) {
 //                lines.add(new Pair<>(rho, theta));
 //            }
-        }
-        double lowestY = 9999;
-        double highestY =-9999;
-        double lowestX = 9999;
-        double highestX =-9999;
-        List<Point> lowestLine = new ArrayList<>();
-        List<Point> highestLine = new ArrayList<>();
-        List<Point> leftLine = new ArrayList<>();
-        List<Point> rightLine = new ArrayList<>();
-
-        lowestLine.add(0, new Point());
-        lowestLine.add(1, new Point());
-        highestLine.add(0, new Point());
-        highestLine.add(1, new Point());
-        leftLine.add(0, new Point());
-        leftLine.add(1, new Point());
-        rightLine.add(0, new Point());
-        rightLine.add(1, new Point());
+////            if (!isRedundant && (abs(angle - theta * 180 / CV_PI) < 5 || abs(angle + 90 - theta * 180 / CV_PI) < 5
+////            ||  abs(angle + 180 - theta * 180 / CV_PI) < 3)) {
+////                lines.add(new Pair<>(rho, theta));
+////            }
+//        }
+//        double lowestY = 9999;
+//        double highestY =-9999;
+//        double lowestX = 9999;
+//        double highestX =-9999;
+//        List<Point> lowestLine = new ArrayList<>();
+//        List<Point> highestLine = new ArrayList<>();
+//        List<Point> leftLine = new ArrayList<>();
+//        List<Point> rightLine = new ArrayList<>();
 //
-        for (Pair p : lines) {
-            double rho = (double) p.getL();
-            double theta = (double) p.getR();
-            double cosTheta = cos(theta);
-            double sinTheta = sin(theta);
-            double x0 = cosTheta * rho;
-            double y0 = sinTheta * rho;
-            Point P1 = new Point(x0 + 10000 *  (-sinTheta), y0 + 10000 * cosTheta);
-            Point P2 = new Point(x0 - 10000 *  (-sinTheta), y0 - 10000 * cosTheta);
-            if (y0 < lowestY) {
-                highestLine.set(0, P1);
-                highestLine.set(1, P2);
-                lowestY = y0;
-            }
-            if (y0 > highestY) {
-                lowestLine.set(0, P1);
-                lowestLine.set(1, P2);
-                highestY = y0;
-            }
-            if (x0 < lowestX) {
-                leftLine.set(0, P1);
-                leftLine.set(1, P2);
-                lowestX = x0;
-            }
-            if (x0 > highestX) {
-                rightLine.set(0, P1);
-                rightLine.set(1, P2);
-                highestX = x0;
-            }
-            line(matColor, P1, P2, COLOR_RED, 2);
-        }
-
+//        lowestLine.add(0, new Point());
+//        lowestLine.add(1, new Point());
+//        highestLine.add(0, new Point());
+//        highestLine.add(1, new Point());
+//        leftLine.add(0, new Point());
+//        leftLine.add(1, new Point());
+//        rightLine.add(0, new Point());
+//        rightLine.add(1, new Point());
+//
+//        for (Pair p : lines) {
+//            double rho = (double) p.getL();
+//            double theta = (double) p.getR();
+//            double cosTheta = cos(theta);
+//            double sinTheta = sin(theta);
+//            double x0 = cosTheta * rho;
+//            double y0 = sinTheta * rho;
+//            Point P1 = new Point(x0 + 10000 *  (-sinTheta), y0 + 10000 * cosTheta);
+//            Point P2 = new Point(x0 - 10000 *  (-sinTheta), y0 - 10000 * cosTheta);
+//            if (y0 < lowestY) {
+//                highestLine.set(0, P1);
+//                highestLine.set(1, P2);
+//                lowestY = y0;
+//            }
+//            if (y0 > highestY) {
+//                lowestLine.set(0, P1);
+//                lowestLine.set(1, P2);
+//                highestY = y0;
+//            }
+//            if (x0 < lowestX) {
+//                leftLine.set(0, P1);
+//                leftLine.set(1, P2);
+//                lowestX = x0;
+//            }
+//            if (x0 > highestX) {
+//                rightLine.set(0, P1);
+//                rightLine.set(1, P2);
+//                highestX = x0;
+//            }
+//            line(matColor, P1, P2, COLOR_RED, 2);
+//        }
+//
         List<Point> orderedPoints = new ArrayList<>();
-//
-        if (lowestLine.size() > 1 && highestLine.size() > 1
-        && leftLine.size() > 1 && rightLine.size() > 1) {
-            line(matColor, leftLine.get(0), leftLine.get(1), COLOR_RED, 2);
-        }
+////
+//        if (lowestLine.size() > 1 && highestLine.size() > 1
+//        && leftLine.size() > 1 && rightLine.size() > 1) {
+//            line(matColor, leftLine.get(0), leftLine.get(1), COLOR_RED, 2);
+//        }
 
 //        List<Point> intersectionPoints = new ArrayList<>();
 //        if (lines.size() > 1) {
@@ -926,17 +926,44 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        }
 
         orderedPoints.addAll(corners.toList());
-        List<MatOfPoint> cannyContours = new ArrayList<>();
 
-        findContours(matGrey, cannyContours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+        Point bl = new Point(9999, 0);
+        Point tl = new Point(0, 9999);
+        Point br = new Point(0, -9999);
+        Point tr = new Point(-9999, 0);
 
-        if (cannyContours.size() == 1) {
-            MatOfPoint2f cannyContour2f = new MatOfPoint2f(cannyContours.get(0).toArray());
-            RotatedRect rotatedRectangleCanny = minAreaRect(cannyContour2f);
-
-//            circle(matColor, rotatedRectangleCanny.center, 2, COLOR_RED);
-//            circle(matColor, rotatedRectangleCanny.boundingRect().br(), 2, COLOR_RED);
+        for (Point p : orderedPoints) {
+            if (p.x < bl.x) {
+                bl = p;
+            }
+            if (p.x > tr.x) {
+                tr = p;
+            }
+            if (p.y < tl.y) {
+                tl = p;
+            }
+            if (p.y > br.y) {
+                br = p;
+            }
         }
+        for(Point corner : orderedPoints) {
+            drawMarker(matColor, corner, COLOR_RED, 1, 2, 2, 1);
+        }
+
+        putText(matColor, "tl", tl, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+        putText(matColor, "tr", tr, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+        putText(matColor, "bl", bl, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+        putText(matColor, "br", br, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+
+
+//        Mat boxCorners = new Mat();
+//
+//        boxPoints(rotatedRectangle, boxCorners);
+
+//        circle(matColor, new Point(boxCorners.get(0,0)[0], boxCorners.get(0,1)[0]), 4, COLOR_RED, -1);
+//        circle(matColor, new Point(boxCorners.get(1,0)[0], boxCorners.get(1,1)[0]), 4, COLOR_RED, -1);
+//        circle(matColor, new Point(boxCorners.get(2,0)[0], boxCorners.get(2,1)[0]), 4, COLOR_RED, -1);
+//        circle(matColor, new Point(boxCorners.get(3,0)[0], boxCorners.get(3,1)[0]), 4, COLOR_RED, -1);
 
         Point center = new Point();
         for (Point point : orderedPoints) {
@@ -946,88 +973,80 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         center.x /= orderedPoints.size();
         center.y /= orderedPoints.size();
 
-        Collections.sort(orderedPoints, new Comparator<Point>() {
-            public int compare(Point x1, Point x2) {
-                double distance1 = sqrt(pow(x1.x - center.x, 2) + pow(x1.y - center.y, 2));
-                double distance2 = sqrt(pow(x2.x - center.x, 2) + pow(x2.y - center.y, 2));
-                return Double.compare(distance2, distance1);
-            }
-        });
-
-        List<Point> extremePoints = new ArrayList<>();
-
-        if (orderedPoints.size() > 3) {
-            extremePoints.add(orderedPoints.get(0));
-            extremePoints.add(orderedPoints.get(1));
-            extremePoints.add(orderedPoints.get(2));
-            extremePoints.add(orderedPoints.get(3));
-
-            circle(matColor, center, 2, COLOR_RED);
-
-            List<Point> top = new ArrayList<>();
-            List<Point> bottom = new ArrayList<>();
-
-            for (Point point : extremePoints) {
-                if (point.y < center.y) {
-                    top.add(point);
-                } else {
-                    bottom.add(point);
-                }
-            }
-
-            Point tl;
-            Point tr;
-            Point bl;
-            Point br;
-
-            if (top.size() > 1 && bottom.size() > 1) {
-                if (top.get(0).x < top.get(1).x) {
-                    tl = top.get(0);
-                    tr = top.get(1);
-                } else {
-                    tl = top.get(1);
-                    tr = top.get(0);
-                }
-
-                if (bottom.get(0).x < bottom.get(1).x) {
-                    bl = bottom.get(0);
-                    br = bottom.get(1);
-                } else {
-                    bl = bottom.get(1);
-                    br = bottom.get(0);
-                }
-
-                double height1 = sqrt(pow(tl.x - bl.x, 2) + pow(tl.y - bl.y, 2));
-                double height2 = sqrt(pow(tr.x - br.x, 2) + pow(tr.y - br.y, 2));
-                double height = max(height1, height2);
-
-                double width1 = sqrt(pow(tl.x - tr.x, 2) + pow(tl.y - tr.y, 2));
-                double width2 = sqrt(pow(bl.x - br.x, 2) + pow(bl.y - br.y, 2));
-                double width = max(width1, width2);
-
-//                putText(matColor, "tl", tl, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-//                putText(matColor, "tr", tr, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-//                putText(matColor, "bl", bl, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-//                putText(matColor, "br", br, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-
-                MatOfPoint2f matrix1 = new MatOfPoint2f(tl, tr, bl, br);
-                MatOfPoint2f matrix2 = new MatOfPoint2f(new Point(0, 0), new Point(width - 1, 0), new Point(0, height - 1), new Point(width - 1, height - 1));
-
-//                putText(matColor, "tl1", new Point(0, 0), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
-//                putText(matColor, "tr1", new Point(width - 1, 0), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
-//                putText(matColor, "bl1", new Point(0, height - 1), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
-//                putText(matColor, "br1", new Point(width - 1, height - 1), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
-
-                Mat warpMat = getPerspectiveTransform(matrix1, matrix2);
-
-//            MatOfPoint2f unrotatedCorners = new MatOfPoint2f(corners.toArray());
-//            perspectiveTransform(unrotatedCorners, unrotatedCorners, warpMat.inv());
+//        List<Point> extremePoints = new ArrayList<>();
 //
-//            for(Point p : unrotatedCorners.toArray()) {
-//                circle(matColor, p, 4, COLOR_RED, -1);
+//        if (orderedPoints.size() > 3) {
+//            extremePoints.add(orderedPoints.get(0));
+//            extremePoints.add(orderedPoints.get(1));
+//            extremePoints.add(orderedPoints.get(2));
+//            extremePoints.add(orderedPoints.get(3));
+//
+//            circle(matColor, center, 2, COLOR_RED);
+//
+//            List<Point> top = new ArrayList<>();
+//            List<Point> bottom = new ArrayList<>();
+//
+//            for (Point point : extremePoints) {
+//                if (point.y < center.y) {
+//                    top.add(point);
+//                } else {
+//                    bottom.add(point);
+//                }
 //            }
-            }
-        }
+//
+//            Point tl;
+//            Point tr;
+//            Point bl;
+//            Point br;
+//
+//            if (top.size() > 1 && bottom.size() > 1) {
+//                if (top.get(0).x < top.get(1).x) {
+//                    tl = top.get(0);
+//                    tr = top.get(1);
+//                } else {
+//                    tl = top.get(1);
+//                    tr = top.get(0);
+//                }
+//
+//                if (bottom.get(0).x < bottom.get(1).x) {
+//                    bl = bottom.get(0);
+//                    br = bottom.get(1);
+//                } else {
+//                    bl = bottom.get(1);
+//                    br = bottom.get(0);
+//                }
+//
+//                double height1 = sqrt(pow(tl.x - bl.x, 2) + pow(tl.y - bl.y, 2));
+//                double height2 = sqrt(pow(tr.x - br.x, 2) + pow(tr.y - br.y, 2));
+//                double height = max(height1, height2);
+//
+//                double width1 = sqrt(pow(tl.x - tr.x, 2) + pow(tl.y - tr.y, 2));
+//                double width2 = sqrt(pow(bl.x - br.x, 2) + pow(bl.y - br.y, 2));
+//                double width = max(width1, width2);
+//
+////                putText(matColor, "tl", tl, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+////                putText(matColor, "tr", tr, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+////                putText(matColor, "bl", bl, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+////                putText(matColor, "br", br, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+//
+//                MatOfPoint2f matrix1 = new MatOfPoint2f(tl, tr, bl, br);
+//                MatOfPoint2f matrix2 = new MatOfPoint2f(new Point(0, 0), new Point(width - 1, 0), new Point(0, height - 1), new Point(width - 1, height - 1));
+//
+////                putText(matColor, "tl1", new Point(0, 0), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
+////                putText(matColor, "tr1", new Point(width - 1, 0), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
+////                putText(matColor, "bl1", new Point(0, height - 1), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
+////                putText(matColor, "br1", new Point(width - 1, height - 1), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
+//
+//                Mat warpMat = getPerspectiveTransform(matrix1, matrix2);
+//
+////            MatOfPoint2f unrotatedCorners = new MatOfPoint2f(corners.toArray());
+////            perspectiveTransform(unrotatedCorners, unrotatedCorners, warpMat.inv());
+////
+////            for(Point p : unrotatedCorners.toArray()) {
+////                circle(matColor, p, 4, COLOR_RED, -1);
+////            }
+//            }
+//        }
 
 
 //
