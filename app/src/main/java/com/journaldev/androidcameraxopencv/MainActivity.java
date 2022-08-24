@@ -140,7 +140,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     int NUMBER_OF_CCTAG_IMAGE_POINTS = 0;
     int TAKE_PHOTO = 0;
     //org.opencv.core.Size MAX_CHESSBOARD_SIZE = new org.opencv.core.Size(9,6);
-    org.opencv.core.Size chessboardSize = new org.opencv.core.Size(10,8);
+    org.opencv.core.Size chessboardSize = new org.opencv.core.Size(8,6);
     org.opencv.core.Size circleGridSize = new org.opencv.core.Size(6,8);
     boolean CAN_TAKE_PHOTO = false;
 
@@ -317,12 +317,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 //---------------------------------------------------------------------------
                         if (currentImageProcessing.equals("CHESSBOARD")) {
-                            List<Point> imagePoints = getChessboardCorners(bitmap).toList();
-                            for(Point corner : imagePoints) {
-                                drawMarker(matColor, corner, COLOR_RED, 1, 2, 2, 1);
-                                putText(matColor, String.valueOf(imagePoints.indexOf(corner)), corner, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-                            }
-                            putText(matColor, "corners = " + imagePoints.size(), new Point(100, 100), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
+                            matColor = getChessboardCorners(bitmap);
+//                            List<Point> imagePoints = getChessboardCorners(bitmap).toList();
+//                            for(Point corner : imagePoints) {
+//                                drawMarker(matColor, corner, COLOR_RED, 1, 2, 2, 1);
+//                                putText(matColor, String.valueOf(imagePoints.indexOf(corner)), corner, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+//                            }
+//                            putText(matColor, "corners = " + imagePoints.size(), new Point(100, 100), FONT_HERSHEY_SIMPLEX, 2, COLOR_GREEN);
+//                            List<Point> pointsList = new ArrayList<>();
+//                            for (int y = 0; y < 6; ++y) {
+//                                for (int x = 0; x < 8; ++x) {
+//                                    Point row = new Point(100 * x + 100, 100 * y + 100);
+//                                    pointsList.add(row);
+//                                }
+//                            }
+//
+//                            for (Point p : pointsList) {
+//                                putText(matColor, String.valueOf(pointsList.indexOf(p)), p, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+//                            }
 
 //                            MatOfPoint2f corners = getChessboardCorners(bitmap);
 
@@ -477,6 +489,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             }
 
+
+
             objectPoints.fromList(pointsList);
 
             File fileDir = getFilesDir();
@@ -534,7 +548,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } else {
 
             for (int y = 0; y < 6; ++y) {
-                for (int x = 0; x < 9; ++x) {
+                for (int x = 0; x < 8; ++x) {
                     Point3 row = new Point3(x, y, 0);
                     pointsList.add(row);
                 }
@@ -745,7 +759,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return matColor;
     }
 
-    private MatOfPoint2f getChessboardCorners(Bitmap bitmap) {
+    private Mat getChessboardCorners(Bitmap bitmap) {
 
         MatOfPoint2f finalMat = new MatOfPoint2f();
 
@@ -815,6 +829,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         RotatedRect rotatedRectangle = minAreaRect(bestContour2f);
 
         double angle = rotatedRectangle.angle;
+
+        putText(matColor, "angle = " + angle, new Point(100, 200), FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
 
         Mat linesMat = new Mat();
         List<Pair<Double, Double>> lines = new ArrayList<>();
@@ -956,10 +972,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //            drawMarker(matColor, corner, COLOR_RED, 1, 2, 2, 1);
 //        }
 
-//        putText(matColor, "tl", tl, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-//        putText(matColor, "tr", tr, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-//        putText(matColor, "bl", bl, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-//        putText(matColor, "br", br, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+        if (angle > 45) {
+            Point temp = new Point(tl.x, tl.y);
+            tl = tr;
+            tr = temp;
+            temp = new Point(bl.x,bl.y);
+            bl = tl;
+            tl = temp;
+            temp = new Point(bl.x,bl.y);
+            bl = br;
+            br = temp;
+        }
+
+        putText(matColor, "tl", tl, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+        putText(matColor, "tr", tr, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+        putText(matColor, "bl", bl, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+        putText(matColor, "br", br, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
 
 
 //        Mat boxCorners = new Mat();
@@ -1118,7 +1146,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //            putText(matColor, String.valueOf(orderedPoints.indexOf(corner)), corner, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
 //        }
 
-        return finalMat;
+        return matColor;
     }
 
     private Mat detectCcTags(Bitmap bitmap) {
