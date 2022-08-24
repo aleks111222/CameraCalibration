@@ -975,12 +975,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 //        List<Point> extremePoints = new ArrayList<>();
 //
-//        if (orderedPoints.size() > 3) {
-//            extremePoints.add(orderedPoints.get(0));
-//            extremePoints.add(orderedPoints.get(1));
-//            extremePoints.add(orderedPoints.get(2));
-//            extremePoints.add(orderedPoints.get(3));
-//
+        if (orderedPoints.size() > 3) {
+
 //            circle(matColor, center, 2, COLOR_RED);
 //
 //            List<Point> top = new ArrayList<>();
@@ -998,7 +994,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //            Point tr;
 //            Point bl;
 //            Point br;
-//
+
 //            if (top.size() > 1 && bottom.size() > 1) {
 //                if (top.get(0).x < top.get(1).x) {
 //                    tl = top.get(0);
@@ -1015,38 +1011,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                    bl = bottom.get(1);
 //                    br = bottom.get(0);
 //                }
+
+            double height1 = sqrt(pow(tl.x - bl.x, 2) + pow(tl.y - bl.y, 2));
+            double height2 = sqrt(pow(tr.x - br.x, 2) + pow(tr.y - br.y, 2));
+            double height = max(height1, height2);
+
+            double width1 = sqrt(pow(tl.x - tr.x, 2) + pow(tl.y - tr.y, 2));
+            double width2 = sqrt(pow(bl.x - br.x, 2) + pow(bl.y - br.y, 2));
+            double width = max(width1, width2);
+
+            MatOfPoint2f matrix1 = new MatOfPoint2f(tl, tr, bl, br);
+            MatOfPoint2f matrix2 = new MatOfPoint2f(new Point(0, 0), new Point(width - 1, 0), new Point(0, height - 1), new Point(width - 1, height - 1));
+
+            putText(matColor, "tl1", new Point(0, 0), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
+            putText(matColor, "tr1", new Point(width - 1, 0), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
+            putText(matColor, "bl1", new Point(0, height - 1), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
+            putText(matColor, "br1", new Point(width - 1, height - 1), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
+
+            Mat warpMat = getPerspectiveTransform(matrix2, matrix1);
+
+            MatOfPoint2f unrotatedCorners = new MatOfPoint2f(corners.toArray());
+            perspectiveTransform(unrotatedCorners, unrotatedCorners, warpMat.inv());
 //
-//                double height1 = sqrt(pow(tl.x - bl.x, 2) + pow(tl.y - bl.y, 2));
-//                double height2 = sqrt(pow(tr.x - br.x, 2) + pow(tr.y - br.y, 2));
-//                double height = max(height1, height2);
-//
-//                double width1 = sqrt(pow(tl.x - tr.x, 2) + pow(tl.y - tr.y, 2));
-//                double width2 = sqrt(pow(bl.x - br.x, 2) + pow(bl.y - br.y, 2));
-//                double width = max(width1, width2);
-//
-////                putText(matColor, "tl", tl, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-////                putText(matColor, "tr", tr, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-////                putText(matColor, "bl", bl, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-////                putText(matColor, "br", br, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-//
-//                MatOfPoint2f matrix1 = new MatOfPoint2f(tl, tr, bl, br);
-//                MatOfPoint2f matrix2 = new MatOfPoint2f(new Point(0, 0), new Point(width - 1, 0), new Point(0, height - 1), new Point(width - 1, height - 1));
-//
-////                putText(matColor, "tl1", new Point(0, 0), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
-////                putText(matColor, "tr1", new Point(width - 1, 0), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
-////                putText(matColor, "bl1", new Point(0, height - 1), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
-////                putText(matColor, "br1", new Point(width - 1, height - 1), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
-//
-//                Mat warpMat = getPerspectiveTransform(matrix1, matrix2);
-//
-////            MatOfPoint2f unrotatedCorners = new MatOfPoint2f(corners.toArray());
-////            perspectiveTransform(unrotatedCorners, unrotatedCorners, warpMat.inv());
-////
-////            for(Point p : unrotatedCorners.toArray()) {
-////                circle(matColor, p, 4, COLOR_RED, -1);
-////            }
-//            }
-//        }
+            for(Point p : unrotatedCorners.toArray()) {
+                circle(matColor, p, 4, COLOR_RED, -1);
+            }
+        }
 
 
 //
