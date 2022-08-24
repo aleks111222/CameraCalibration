@@ -317,7 +317,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 //---------------------------------------------------------------------------
                         if (currentImageProcessing.equals("CHESSBOARD")) {
-                            matColor = getChessboardCorners(bitmap);
+                            List<Point> imagePoints = getChessboardCorners(bitmap).toList();
+                            for(Point corner : imagePoints) {
+                                drawMarker(matColor, corner, COLOR_RED, 1, 2, 2, 1);
+                                putText(matColor, String.valueOf(imagePoints.indexOf(corner)), corner, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+                            }
+                            putText(matColor, "corners = " + imagePoints.size(), new Point(100, 100), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
+
 //                            MatOfPoint2f corners = getChessboardCorners(bitmap);
 
 //                            if(corners.toList().size() >= 4) {
@@ -525,7 +531,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 out.close();
             } catch (Exception e) {
             }
-        }else {
+        } else {
 
             for (int y = 0; y < 6; ++y) {
                 for (int x = 0; x < 9; ++x) {
@@ -739,9 +745,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return matColor;
     }
 
-    private Mat getChessboardCorners(Bitmap bitmap) {
+    private MatOfPoint2f getChessboardCorners(Bitmap bitmap) {
 
-        Mat matReference = new Mat();
+        MatOfPoint2f finalMat = new MatOfPoint2f();
 
         Mat matColor = new Mat();
         Mat matGrey = new Mat();
@@ -946,14 +952,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 br = p;
             }
         }
-        for(Point corner : orderedPoints) {
-            drawMarker(matColor, corner, COLOR_RED, 1, 2, 2, 1);
-        }
+//        for(Point corner : orderedPoints) {
+//            drawMarker(matColor, corner, COLOR_RED, 1, 2, 2, 1);
+//        }
 
-        putText(matColor, "tl", tl, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-        putText(matColor, "tr", tr, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-        putText(matColor, "bl", bl, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-        putText(matColor, "br", br, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+//        putText(matColor, "tl", tl, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+//        putText(matColor, "tr", tr, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+//        putText(matColor, "bl", bl, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+//        putText(matColor, "br", br, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
 
 
 //        Mat boxCorners = new Mat();
@@ -1023,28 +1029,48 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             MatOfPoint2f matrix1 = new MatOfPoint2f(tl, tr, bl, br);
             MatOfPoint2f matrix2 = new MatOfPoint2f(new Point(0, 0), new Point(width - 1, 0), new Point(0, height - 1), new Point(width - 1, height - 1));
 
-            putText(matColor, "tl1", new Point(0, 0), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
-            putText(matColor, "tr1", new Point(width - 1, 0), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
-            putText(matColor, "bl1", new Point(0, height - 1), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
-            putText(matColor, "br1", new Point(width - 1, height - 1), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
+//            putText(matColor, "tl1", new Point(0, 0), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
+//            putText(matColor, "tr1", new Point(width - 1, 0), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
+//            putText(matColor, "bl1", new Point(0, height - 1), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
+//            putText(matColor, "br1", new Point(width - 1, height - 1), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
 
             Mat warpMat = getPerspectiveTransform(matrix2, matrix1);
 
-            MatOfPoint2f unrotatedCorners = new MatOfPoint2f(corners.toArray());
-            perspectiveTransform(unrotatedCorners, unrotatedCorners, warpMat.inv());
+//            MatOfPoint2f unrotatedCorners = new MatOfPoint2f(corners.toArray());
+//            perspectiveTransform(unrotatedCorners, unrotatedCorners, warpMat.inv());
 //
-            for(Point p : unrotatedCorners.toArray()) {
-                circle(matColor, p, 4, COLOR_RED, -1);
-            }
+//            for(Point p : unrotatedCorners.toArray()) {
+//                circle(matColor, p, 4, COLOR_RED, -1);
+//            }
+
+            Collections.sort(orderedPoints, new Comparator<Point>() {
+                public int compare(Point x1, Point x2) {
+                    List<Point> listForMat = new ArrayList<>();
+                    listForMat.add(x1);
+                    listForMat.add(x2);
+                    MatOfPoint2f mat = new MatOfPoint2f();
+                    mat.fromList(listForMat);
+                    perspectiveTransform(mat, mat, warpMat.inv());
+                    if (abs(mat.toArray()[0].y - mat.toArray()[1].y) < 10) {
+                        return Double.compare(mat.toArray()[0].x, mat.toArray()[1].x);
+                    }
+                    return Double.compare(mat.toArray()[0].y, mat.toArray()[1].y);
+                }
+            });
+
+//            for (Point p : orderedPoints) {
+//                putText(matColor, "" + orderedPoints.indexOf(p), p, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+//            }
+
+
+//            for (int i = 0; i < orderedPoints.size(); i++) {
+//                finalMat.put((int) (i / chessboardSize.height), (int) (i % chessboardSize.width), orderedPoints.get(i).x, orderedPoints.get(i).y);
+//            }
+
+            finalMat.fromList(orderedPoints);
         }
-
-
 //
-////        for (Point p : orderedPoints) {
-////            drawMarker(matColor, p, COLOR_RED, 1, 2, 2, 1);
-////        }
 ////
-////        Log.d("Debug", "" + orderedPoints.size());
 //
 ////        for(int index = 0; index < corners.toList().size() - 1; index++) {
 ////            if(!(sqrt(pow(corners.toArray()[index].x - corners.toArray()[index + 1].x, 2) + pow(corners.toArray()[index].y - corners.toArray()[index + 1].y, 2)) < 15)) {
@@ -1092,7 +1118,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //            putText(matColor, String.valueOf(orderedPoints.indexOf(corner)), corner, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
 //        }
 
-        return matColor;
+        return finalMat;
     }
 
     private Mat detectCcTags(Bitmap bitmap) {
