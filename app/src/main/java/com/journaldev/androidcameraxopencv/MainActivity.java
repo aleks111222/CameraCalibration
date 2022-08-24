@@ -317,12 +317,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 //---------------------------------------------------------------------------
                         if (currentImageProcessing.equals("CHESSBOARD")) {
-                            matColor = getChessboardCorners(bitmap);
-//                            List<Point> imagePoints = getChessboardCorners(bitmap).toList();
-//                            for(Point corner : imagePoints) {
-//                                drawMarker(matColor, corner, COLOR_RED, 1, 2, 2, 1);
-//                                putText(matColor, String.valueOf(imagePoints.indexOf(corner)), corner, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-//                            }
+//                            matColor = getChessboardCorners(bitmap);
+                            List<Point> imagePoints = getChessboardCorners(bitmap).toList();
+                            for(Point corner : imagePoints) {
+                                drawMarker(matColor, corner, COLOR_RED, 1, 2, 2, 1);
+                                putText(matColor, String.valueOf(imagePoints.indexOf(corner)), corner, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+                            }
 //                            putText(matColor, "corners = " + imagePoints.size(), new Point(100, 100), FONT_HERSHEY_SIMPLEX, 2, COLOR_GREEN);
 //                            List<Point> pointsList = new ArrayList<>();
 //                            for (int y = 0; y < 6; ++y) {
@@ -563,7 +563,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             for (int i = 0; i < fileDir.listFiles().length; i++) {
                 photosObjectPoints.add(objectPoints);
-//                photoImagePoints2f = getChessboardCorners(BitmapFactory.decodeFile(fileDir.listFiles()[i].getPath()));
+                photoImagePoints2f = getChessboardCorners(BitmapFactory.decodeFile(fileDir.listFiles()[i].getPath()));
             /*for(int y=0; y<54; y++) {
                     Mat row = new Mat(1, 3, CV_32F);
                     row.col(0).setTo(new Scalar(photoImagePoints2f.toList().get(y).x));
@@ -759,7 +759,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return matColor;
     }
 
-    private Mat getChessboardCorners(Bitmap bitmap) {
+    private MatOfPoint2f getChessboardCorners(Bitmap bitmap) {
 
         MatOfPoint2f finalMat = new MatOfPoint2f();
 
@@ -805,12 +805,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         Mat emptyMat = new Mat();
 
-        Canny(matGrey, matGrey, 30, 150, 3, false);
+//        Canny(matGrey, matGrey, 30, 150, 3, false);
 
         goodFeaturesToTrack(matGrey, corners, (int) (chessboardSize.width * chessboardSize.height), 0.01, 10, emptyMat, 3, false, 0.04);
 
-        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new org.opencv.core.Size(2, 2));
-        Imgproc.dilate(matGrey, matGrey, kernel);
+//        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new org.opencv.core.Size(2, 2));
+//        Imgproc.dilate(matGrey, matGrey, kernel);
 
         class Pair<L,R> {
             private L l;
@@ -984,10 +984,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             br = temp;
         }
 
-        putText(matColor, "tl", tl, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-        putText(matColor, "tr", tr, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-        putText(matColor, "bl", bl, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-        putText(matColor, "br", br, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+//        putText(matColor, "tl", tl, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+//        putText(matColor, "tr", tr, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+//        putText(matColor, "bl", bl, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+//        putText(matColor, "br", br, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
 
 
 //        Mat boxCorners = new Mat();
@@ -1146,7 +1146,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //            putText(matColor, String.valueOf(orderedPoints.indexOf(corner)), corner, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
 //        }
 
-        return matColor;
+        return finalMat;
     }
 
     private Mat detectCcTags(Bitmap bitmap) {
