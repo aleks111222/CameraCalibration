@@ -395,18 +395,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Mat matTest = new Mat();
         Mat matTest2 = new Mat();
 
-        if(currentImageProcessing.equals("CCTAG")) {/*
-            Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.reference1);
-            Utils.bitmapToMat(bitmap, matTest);
+        if(currentImageProcessing.equals("CCTAG")) {
+            Bitmap bitmapRef = BitmapFactory.decodeResource(getResources(), R.drawable.reference1);
+            Utils.bitmapToMat(bitmapRef, matTest);
             int j = 0;
-            for(Point imagePoint : detectCcTags(bitmap)) {
+            for(Point imagePoint : detectCcTags(bitmapRef).toArray()) {
                 pointsList.add(new Point3(imagePoint.x, imagePoint.y, 0));
-                circle(matTest, new Point(imagePoint.x, imagePoint.y), 3, COLOR_RED, -1);
-                putText(matTest, String.valueOf(j), imagePoint,
-                        FONT_HERSHEY_SIMPLEX, 1, COLOR_BLUE, 3);
+                drawMarker(matTest, imagePoint, COLOR_RED, 1, 2, 2, 1);
+                putText(matTest, "" + detectCcTags(bitmapRef).toList().indexOf(imagePoint), imagePoint, FONT_HERSHEY_SIMPLEX, 0.8, COLOR_RED, 1);
                 j++;
             }
-            Log.d("Debug:", String.valueOf(pointsList.size()));
             objectPoints.fromList(pointsList);
 
             j = 0;
@@ -418,18 +416,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             for (int i = 0; i < fileDir.listFiles().length; i++) {
                 photosObjectPoints.add(objectPoints);
-                photoImagePoints2f.fromList(detectCcTags(BitmapFactory.decodeFile(fileDir.listFiles()[i].getPath())));
-                Utils.bitmapToMat(BitmapFactory.decodeFile(fileDir.listFiles()[i].getPath()), matTest2);
+                photoImagePoints2f.fromList(detectCcTags(BitmapFactory.decodeFile(fileDir.listFiles()[i].getPath())).toList());
+//                Utils.bitmapToMat(BitmapFactory.decodeFile(fileDir.listFiles()[i].getPath()), matTest2);
 
-                for(Point imagePoint : detectCcTags(BitmapFactory.decodeFile(fileDir.listFiles()[i].getPath()))) {
-                    //pointsList.add(new Point3(imagePoint.x, imagePoint.y, 0));
-                    circle(matTest2, new Point(imagePoint.x, imagePoint.y), 3, COLOR_RED, -1);
-                    putText(matTest2, String.valueOf(j), imagePoint,
-                            FONT_HERSHEY_SIMPLEX, 1, COLOR_BLUE, 3);
-                    j++;
-                }
+//                for(Point imagePoint : detectCcTags(BitmapFactory.decodeFile(fileDir.listFiles()[i].getPath())).toList()) {
+//                    //pointsList.add(new Point3(imagePoint.x, imagePoint.y, 0));
+//                    circle(matTest2, new Point(imagePoint.x, imagePoint.y), 3, COLOR_RED, -1);
+//                    putText(matTest2, String.valueOf(j), imagePoint,
+//                            FONT_HERSHEY_SIMPLEX, 1, COLOR_BLUE, 3);
+//                    j++;
+//                }
 
-                Log.d("Debug:", String.valueOf(photoImagePoints2f.size()));
+                Log.d("Debug:", "" + photoImagePoints2f.size() + fileDir.listFiles()[i].getPath());
                 photosImagePoints.add(photoImagePoints2f);
             }
 
@@ -438,12 +436,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             List<Mat> rvecs = new ArrayList<>();
             List<Mat> tvecs = new ArrayList<>();
 
-            Bitmap bitmap2 = BitmapFactory.decodeFile(fileDir.listFiles()[0].getPath());
-            Log.d("Debug:", String.valueOf(fileDir.listFiles()[0].getPath()));
-
             calibrateCamera(photosObjectPoints, photosImagePoints, IMAGE_SIZE, cameraMatrix, distCoeffs, rvecs, tvecs);
 
-            bitmap = BitmapFactory.decodeFile(fileDir.listFiles()[0].getPath());
+            Bitmap bitmap = BitmapFactory.decodeFile(fileDir.listFiles()[0].getPath());
             Mat matDistorted = new Mat();
             Mat matUndistorted = new Mat();
             Utils.bitmapToMat(bitmap, matDistorted);
@@ -472,7 +467,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 out.flush();
                 out.close();
             } catch (Exception e) {
-            }*/
+            }
 
         } else if(currentImageProcessing.equals("ASSYMETRIC_CIRCLES")) {
             for (int y = 0; y < circleGridSize.height; ++y) {
@@ -1458,7 +1453,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             RotatedRect rotatedRectangle = minAreaRect(bestContour2f);
 
             double angle = rotatedRectangle.angle;
-
+            if (angle > 45) {
+                angle -= 90;
+            }
 
             Mat ccTagRotationMatrix = getRotationMatrix2D(averageCenter, -angle, 1);
 
@@ -1474,9 +1471,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 //            putText(matColor, "angle = " + angle, new Point(200,200), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
 //
-            for (Integer i : imagePointsMap.keySet()) {
-                imagePoints.add(imagePointsMap.get(i));
-                putText(matColor, "" + i, imagePointsMap.get(i), FONT_HERSHEY_SIMPLEX, 0.8, COLOR_RED, 1);
+            for (Integer i : unrotatedImagePointsMap.keySet()) {
+                imagePoints.add(unrotatedImagePointsMap.get(i));
+                putText(matColor, "" + i, unrotatedImagePointsMap.get(i), FONT_HERSHEY_SIMPLEX, 0.8, COLOR_RED, 1);
             }
         }
 
