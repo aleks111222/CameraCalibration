@@ -343,10 +343,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                                drawMarker(matColor, new Point(corners.get((int) (chessboardSize.width * chessboardSize.height) - 1, 0)), COLOR_YELLOW, 1, 10, 5, 1);
 //                            }
                         } else if (currentImageProcessing.equals("CCTAG")) {
-                            matColor = detectCcTags(bitmap);
-                            /*for(Point imagePoint : detectCcTags(bitmap)) {
-                                circle(matColor, new Point(imagePoint.x, imagePoint.y), 3, COLOR_RED, -1);
-                            }*/
+//                            matColor = detectCcTags(bitmap);
+                            List<Point> imagePoints = detectCcTags(bitmap).toList();
+                            for (Point point : imagePoints) {
+                                drawMarker(matColor, point, COLOR_RED, 1, 2, 2, 1);
+                                putText(matColor, "" + imagePoints.indexOf(point), point, FONT_HERSHEY_SIMPLEX, 0.8, COLOR_RED, 1);
+                            }
+
                         } else if (currentImageProcessing.equals("ASSYMETRIC_CIRCLES")) {
 //                            matColor = getAssymetricCircleCenters(bitmap);
                             List<Point> imagePoints = getAssymetricCircleCenters(bitmap).toList();
@@ -1223,7 +1226,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return finalMat;
     }
 
-    private Mat detectCcTags(Bitmap bitmap) {
+    private MatOfPoint2f detectCcTags(Bitmap bitmap) {
 
         Mat matColor = new Mat();
         Mat matGrey = new Mat();
@@ -1315,6 +1318,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //            ellipse(matColor, ellipsesWithCommonCentersBest.get(i), COLOR_RED, 2);
 //        }
 //
+        Map<Integer, Point> imagePointsMap = new HashMap<>();
+        List<Point> imagePoints = new ArrayList<>();
         if (ellipsesWithCommonCentersBest.size() > 1) {
             Point averageCenter = new Point();
 
@@ -1377,7 +1382,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             });
 //
             Map<Integer, Point> currentRingPointsMap = new HashMap<>();
-            Map<Integer, Point> imagePointsMap = new HashMap<>();
             boolean isThisMergedContour;
             Integer currentId = 0;
             Integer previouslyAddedId = 0;
@@ -1471,6 +1475,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //            putText(matColor, "angle = " + angle, new Point(200,200), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
 //
             for (Integer i : imagePointsMap.keySet()) {
+                imagePoints.add(imagePointsMap.get(i));
                 putText(matColor, "" + i, imagePointsMap.get(i), FONT_HERSHEY_SIMPLEX, 0.8, COLOR_RED, 1);
             }
         }
@@ -1637,7 +1642,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //            }
 //        }
 
-        return matColor;
+        MatOfPoint2f finalMat = new MatOfPoint2f();
+        finalMat.fromList(imagePoints);
+
+        return finalMat;
     }
 
     private void showAcceptedRejectedButton(boolean acceptedRejected) {
