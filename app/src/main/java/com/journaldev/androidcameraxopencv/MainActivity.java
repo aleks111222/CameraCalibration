@@ -708,10 +708,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             br = temp;
         }
 
-        putText(matColor, "tl", tl, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-        putText(matColor, "tr", tr, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-        putText(matColor, "bl", bl, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-        putText(matColor, "br", br, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+//        putText(matColor, "tl", tl, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+//        putText(matColor, "tr", tr, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+//        putText(matColor, "bl", bl, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+//        putText(matColor, "br", br, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
 
 //        Mat chessboardRotationMatrix = getRotationMatrix2D(rotatedRectangle.center, angle, 1);
 
@@ -783,8 +783,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             matrix2 = new MatOfPoint2f(new Point(0, 0), new Point(sqrt(pow(width, 2) - pow(height / 6, 2)), height / 6), new Point(0, height),
                     new Point(sqrt(pow(width, 2) - pow(height / 6, 2)), height * 7 / 6));
         } else {
-            matrix2 = new MatOfPoint2f(new Point(0, 0), new Point(width, 0), new Point(0, height * 7 / 6),
-                    new Point(sqrt(pow(width, 2) - pow(height / 6, 2)), height * 7 / 6));
+            matrix2 = new MatOfPoint2f(new Point(0, 0), new Point(width, 0), new Point(height / 6, height * 7 / 6),
+                    new Point(11 / 10 * width, height * 7 / 6));
         }
 
         Mat warpMat = getPerspectiveTransform(matrix2, matrix1);
@@ -824,10 +824,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //            }
 //        }
 
-//        for (KeyPoint keyPoint : orderedPoints) {
-//            drawMarker(matColor, keyPoint.pt, COLOR_RED, 1, 2, 2, 1);
-//            putText(matColor, String.valueOf(orderedPoints.indexOf(keyPoint)), keyPoint.pt, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-//        }
+        for (KeyPoint keyPoint : orderedPoints) {
+            drawMarker(matColor, keyPoint.pt, COLOR_RED, 1, 2, 2, 1);
+            putText(matColor, String.valueOf(orderedPoints.indexOf(keyPoint)), keyPoint.pt, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+        }
 
         return matColor;
     }
