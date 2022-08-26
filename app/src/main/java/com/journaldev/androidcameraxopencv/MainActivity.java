@@ -39,6 +39,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.atan;
 import static java.lang.Math.cos;
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.Math.pow;
 import static java.lang.Math.sin;
 import static java.lang.Math.sqrt;
@@ -137,14 +138,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Scalar COLOR_BLUE = new Scalar(0.0, 0.0, 255.0, 255.0);
     Scalar COLOR_YELLOW = new Scalar(255.0, 255.0, 0.0, 255.0);
     org.opencv.core.Size IMAGE_SIZE = new org.opencv.core.Size(1512, 2016);
-    int NUMBER_OF_CCTAG_IMAGE_POINTS = 0;
-    int TAKE_PHOTO = 0;
     //org.opencv.core.Size MAX_CHESSBOARD_SIZE = new org.opencv.core.Size(9,6);
     org.opencv.core.Size chessboardSize = new org.opencv.core.Size(8,6);
     org.opencv.core.Size circleGridSize = new org.opencv.core.Size(6,8);
     boolean CAN_TAKE_PHOTO = false;
 
-    String currentImageProcessing = "CHESSBOARD";
+    String currentImageProcessing = "ASSYMETRIC_CIRCLES";
 
     ImageCapture imageCapture;
     ImageAnalysis imageAnalysis;
@@ -231,8 +230,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             @Override
             public void onClick(View v) {
-                if(currentImageProcessing.equals("CCTAG") && NUMBER_OF_CCTAG_IMAGE_POINTS == 47) {
-                    TAKE_PHOTO = 1;
+                if(currentImageProcessing.equals("CCTAG")) {
                     /*imgCapture.takePicture(new ImageCapture.OnImageCapturedListener() {
                         @Override
                         public void onCaptureSuccess(ImageProxy image, int rotationDegrees) {
@@ -247,7 +245,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         }
                     });*/
                 }
-                if(currentImageProcessing.equals("ASSYMETRIC_CIRCLES") && CAN_TAKE_PHOTO) {
+                if(currentImageProcessing.equals("ASSYMETRIC_CIRCLES")) {
                     imgCapture.takePicture(new ImageCapture.OnImageCapturedListener() {
                         @Override
                         public void onCaptureSuccess(ImageProxy image, int rotationDegrees) {
@@ -581,7 +579,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             calibrateCamera(photosObjectPoints, photosImagePoints, IMAGE_SIZE, cameraMatrix, distCoeffs, rvecs, tvecs);
 
-            Bitmap bitmap = BitmapFactory.decodeFile(fileDir.listFiles()[0].getPath());
+            Bitmap bitmap = BitmapFactory.decodeFile(fileDir.listFiles()[24].getPath());
             Mat matDistorted = new Mat();
             Mat matUndistorted = new Mat();
             Utils.bitmapToMat(bitmap, matDistorted);
@@ -659,13 +657,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         blobParams.set_minThreshold(8);
         blobParams.set_maxThreshold(255);
-        blobParams.set_filterByArea(true);
-        blobParams.set_minArea(32);
-        blobParams.set_maxArea(2500);
-        blobParams.set_filterByCircularity(true);
-        blobParams.set_minCircularity((float) 0.1);
-        blobParams.set_filterByConvexity(true);
-        blobParams.set_minConvexity((float) 0.87);
+        blobParams.set_filterByCircularity(false);
         blobParams.set_filterByInertia(false);
 //        blobParams.set_minInertiaRatio((float) 0.01);
 
@@ -681,55 +673,136 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         double angle = rotatedRectangle.angle;
 
-        Mat chessboardRotationMatrix = getRotationMatrix2D(rotatedRectangle.center, angle, 1);
+        Point bl = new Point(9999, 0);
+        Point tl = new Point(0, 9999);
+        Point br = new Point(0, -9999);
+        Point tr = new Point(-9999, 0);
 
-        putText(matColor, "angle = " + angle, new Point(200,200), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
+        for (KeyPoint p : orderedPoints) {
+            if (p.pt.x < bl.x) {
+                bl = p.pt;
+            }
+            if (p.pt.x > tr.x) {
+                tr = p.pt;
+            }
+            if (p.pt.y < tl.y) {
+                tl = p.pt;
+            }
+            if (p.pt.y > br.y) {
+                br = p.pt;
+            }
+        }
+//        for(Point corner : orderedPoints) {
+//            drawMarker(matColor, corner, COLOR_RED, 1, 2, 2, 1);
+//        }
+
+        if (angle > 45) {
+            Point temp = new Point(tl.x, tl.y);
+            tl = tr;
+            tr = temp;
+            temp = new Point(bl.x,bl.y);
+            bl = tl;
+            tl = temp;
+            temp = new Point(bl.x,bl.y);
+            bl = br;
+            br = temp;
+        }
+
+        putText(matColor, "tl", tl, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+        putText(matColor, "tr", tr, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+        putText(matColor, "bl", bl, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+        putText(matColor, "br", br, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+
+//        Mat chessboardRotationMatrix = getRotationMatrix2D(rotatedRectangle.center, angle, 1);
+
+        putText(matColor, "points = " + orderedPoints.size(), new Point(200,200), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
+
+//        Collections.sort(orderedPoints, new Comparator<KeyPoint>() {
+//            public int compare(KeyPoint x1, KeyPoint x2) {
+//                double x1Prime = chessboardRotationMatrix.get(0,0)[0] * x1.pt.x + chessboardRotationMatrix.get(0,1)[0] * x1.pt.y + chessboardRotationMatrix.get(0,2)[0];
+//                double y1Prime = chessboardRotationMatrix.get(1,0)[0] * x1.pt.x + chessboardRotationMatrix.get(1,1)[0] * x1.pt.y + chessboardRotationMatrix.get(1,2)[0];
+//                double x2Prime = chessboardRotationMatrix.get(0,0)[0] * x2.pt.x + chessboardRotationMatrix.get(0,1)[0] * x2.pt.y + chessboardRotationMatrix.get(0,2)[0];
+//                double y2Prime = chessboardRotationMatrix.get(1,0)[0] * x2.pt.x + chessboardRotationMatrix.get(1,1)[0] * x2.pt.y + chessboardRotationMatrix.get(1,2)[0];
+//                return Double.compare(100 * y1Prime + 10 * x1Prime, 100 * y2Prime + 10 * x2Prime);
+//            }
+//        });
+//
+//        Mat cornerMatrix = zeros(circleGridSize, CV_64FC2);
+//
+//        double smallestDeltaX = 9999;
+//        double smallestDeltaY = 9999;
+//
+//        if(orderedPoints.size() <= circleGridSize.width * circleGridSize.height && orderedPoints.size() > circleGridSize.width * circleGridSize.height / 4) {
+//            CAN_TAKE_PHOTO = true;
+//
+//            int currentRow = 0;
+//            int currentColumn = 0;
+//            double currentY = chessboardRotationMatrix.get(1, 0)[0] * orderedPoints.get(0).pt.x + chessboardRotationMatrix.get(1, 1)[0] * orderedPoints.get(0).pt.y + chessboardRotationMatrix.get(1, 2)[0];
+//            double currentX = chessboardRotationMatrix.get(0, 0)[0] * orderedPoints.get(0).pt.x + chessboardRotationMatrix.get(0, 1)[0] * orderedPoints.get(0).pt.y + chessboardRotationMatrix.get(0, 2)[0];
+//            double realX = orderedPoints.get(0).pt.x;
+//            double realY = orderedPoints.get(0).pt.y;
+//            for (KeyPoint corner : orderedPoints) {
+//                double yPrime = chessboardRotationMatrix.get(1, 0)[0] * corner.pt.x + chessboardRotationMatrix.get(1, 1)[0] * corner.pt.y + chessboardRotationMatrix.get(1, 2)[0];
+//                double XPrime = chessboardRotationMatrix.get(0, 0)[0] * corner.pt.x + chessboardRotationMatrix.get(0, 1)[0] * corner.pt.y + chessboardRotationMatrix.get(0, 2)[0];
+//                if(abs(yPrime - currentY) > 15) {
+//                    if (abs(corner.pt.y - realY) < smallestDeltaY) {
+//                        smallestDeltaY = abs(corner.pt.y - realY);
+//                    }
+//                    currentRow++;
+//                    currentColumn = 0;
+//                } else if (abs(XPrime - currentX) > 15 && abs(corner.pt.x - realX) < smallestDeltaX) {
+//                    smallestDeltaX = abs(corner.pt.x - realX);
+//                }
+//                cornerMatrix.put(currentRow, currentColumn, corner.pt.x, corner.pt.y);
+//                currentColumn++;
+//                currentY = yPrime;
+//            }
+//        } else {
+//            CAN_TAKE_PHOTO = false;
+//        }
+
+        Point center = new Point();
+        for (KeyPoint point : orderedPoints) {
+            center.x += point.pt.x;
+            center.y += point.pt.y;
+        }
+        center.x /= orderedPoints.size();
+        center.y /= orderedPoints.size();
+
+        double height1 = sqrt(pow(tl.x - bl.x, 2) + pow(tl.y - bl.y, 2));
+        double height2 = sqrt(pow(tr.x - br.x, 2) + pow(tr.y - br.y, 2));
+        double height = max(height1, height2);
+
+        double width1 = sqrt(pow(tl.x - tr.x, 2) + pow(tl.y - tr.y, 2));
+        double width2 = sqrt(pow(bl.x - br.x, 2) + pow(bl.y - br.y, 2));
+        double width = max(width1, width2);
+
+        MatOfPoint2f matrix1 = new MatOfPoint2f(tl, tr, bl, br);
+        MatOfPoint2f matrix2;
+        if (angle < 45) {
+            matrix2 = new MatOfPoint2f(new Point(0, 0), new Point(sqrt(pow(width, 2) - pow(height / 6, 2)), height / 6), new Point(0, height),
+                    new Point(sqrt(pow(width, 2) - pow(height / 6, 2)), height * 7 / 6));
+        } else {
+            matrix2 = new MatOfPoint2f(new Point(0, 0), new Point(width, 0), new Point(0, height * 7 / 6),
+                    new Point(sqrt(pow(width, 2) - pow(height / 6, 2)), height * 7 / 6));
+        }
+
+        Mat warpMat = getPerspectiveTransform(matrix2, matrix1);
 
         Collections.sort(orderedPoints, new Comparator<KeyPoint>() {
             public int compare(KeyPoint x1, KeyPoint x2) {
-                double x1Prime = chessboardRotationMatrix.get(0,0)[0] * x1.pt.x + chessboardRotationMatrix.get(0,1)[0] * x1.pt.y + chessboardRotationMatrix.get(0,2)[0];
-                double y1Prime = chessboardRotationMatrix.get(1,0)[0] * x1.pt.x + chessboardRotationMatrix.get(1,1)[0] * x1.pt.y + chessboardRotationMatrix.get(1,2)[0];
-                double x2Prime = chessboardRotationMatrix.get(0,0)[0] * x2.pt.x + chessboardRotationMatrix.get(0,1)[0] * x2.pt.y + chessboardRotationMatrix.get(0,2)[0];
-                double y2Prime = chessboardRotationMatrix.get(1,0)[0] * x2.pt.x + chessboardRotationMatrix.get(1,1)[0] * x2.pt.y + chessboardRotationMatrix.get(1,2)[0];
-                return Double.compare(100 * y1Prime + 10 * x1Prime, 100 * y2Prime + 10 * x2Prime);
+                List<Point> listForMat = new ArrayList<>();
+                listForMat.add(x1.pt);
+                listForMat.add(x2.pt);
+                MatOfPoint2f mat = new MatOfPoint2f();
+                mat.fromList(listForMat);
+                perspectiveTransform(mat, mat, warpMat.inv());
+                if (abs(mat.toArray()[0].y - mat.toArray()[1].y) < 10) {
+                    return Double.compare(mat.toArray()[0].x, mat.toArray()[1].x);
+                }
+                return Double.compare(mat.toArray()[0].y, mat.toArray()[1].y);
             }
         });
-
-        Mat cornerMatrix = zeros(circleGridSize, CV_64FC2);
-
-        double smallestDeltaX = 9999;
-        double smallestDeltaY = 9999;
-
-        if(orderedPoints.size() <= circleGridSize.width * circleGridSize.height && orderedPoints.size() > circleGridSize.width * circleGridSize.height / 4) {
-            CAN_TAKE_PHOTO = true;
-
-            int currentRow = 0;
-            int currentColumn = 0;
-            double currentY = chessboardRotationMatrix.get(1, 0)[0] * orderedPoints.get(0).pt.x + chessboardRotationMatrix.get(1, 1)[0] * orderedPoints.get(0).pt.y + chessboardRotationMatrix.get(1, 2)[0];
-            double currentX = chessboardRotationMatrix.get(0, 0)[0] * orderedPoints.get(0).pt.x + chessboardRotationMatrix.get(0, 1)[0] * orderedPoints.get(0).pt.y + chessboardRotationMatrix.get(0, 2)[0];
-            double realX = orderedPoints.get(0).pt.x;
-            double realY = orderedPoints.get(0).pt.y;
-            for (KeyPoint corner : orderedPoints) {
-                double yPrime = chessboardRotationMatrix.get(1, 0)[0] * corner.pt.x + chessboardRotationMatrix.get(1, 1)[0] * corner.pt.y + chessboardRotationMatrix.get(1, 2)[0];
-                double XPrime = chessboardRotationMatrix.get(0, 0)[0] * corner.pt.x + chessboardRotationMatrix.get(0, 1)[0] * corner.pt.y + chessboardRotationMatrix.get(0, 2)[0];
-                if(abs(yPrime - currentY) > 15) {
-                    if (abs(corner.pt.y - realY) < smallestDeltaY) {
-                        smallestDeltaY = abs(corner.pt.y - realY);
-                    }
-                    currentRow++;
-                    currentColumn = 0;
-                } else if (abs(XPrime - currentX) > 15 && abs(corner.pt.x - realX) < smallestDeltaX) {
-                    smallestDeltaX = abs(corner.pt.x - realX);
-                }
-                cornerMatrix.put(currentRow, currentColumn, corner.pt.x, corner.pt.y);
-                currentColumn++;
-                currentY = yPrime;
-            }
-        } else {
-            CAN_TAKE_PHOTO = false;
-        }
-
-        Mat cornerMatrixDoneWell = zeros(circleGridSize, CV_64FC2);
 
 //        for (int i = 0; i < 1; i++) {
 //            Point predictionPoint = new Point(cornerMatrix.get(i, 0)[0] + smallestDeltaX, cornerMatrix.get(i, 0)[1]);
@@ -751,10 +824,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //            }
 //        }
 
-        for (KeyPoint keyPoint : orderedPoints) {
-            drawMarker(matColor, keyPoint.pt, COLOR_RED, 1, 2, 2, 1);
-            putText(matColor, String.valueOf(orderedPoints.indexOf(keyPoint)), keyPoint.pt, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-        }
+//        for (KeyPoint keyPoint : orderedPoints) {
+//            drawMarker(matColor, keyPoint.pt, COLOR_RED, 1, 2, 2, 1);
+//            putText(matColor, String.valueOf(orderedPoints.indexOf(keyPoint)), keyPoint.pt, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+//        }
 
         return matColor;
     }
@@ -1150,8 +1223,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private Mat detectCcTags(Bitmap bitmap) {
-
-        NUMBER_OF_CCTAG_IMAGE_POINTS = 0;
 
         Mat matColor = new Mat();
         Mat matGrey = new Mat();
