@@ -487,8 +487,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             }
 
-
-
             objectPoints.fromList(pointsList);
 
             File fileDir = getFilesDir();
@@ -542,6 +540,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 out.flush();
                 out.close();
             } catch (Exception e) {
+
             }
         } else {
 
