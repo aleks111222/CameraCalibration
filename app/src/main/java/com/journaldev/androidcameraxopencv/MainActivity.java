@@ -143,7 +143,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     org.opencv.core.Size circleGridSize = new org.opencv.core.Size(6,8);
     boolean CAN_TAKE_PHOTO = false;
 
-    String currentImageProcessing = "ASSYMETRIC_CIRCLES";
+    String currentImageProcessing = "CCTAG";
 
     ImageCapture imageCapture;
     ImageAnalysis imageAnalysis;
@@ -348,16 +348,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 circle(matColor, new Point(imagePoint.x, imagePoint.y), 3, COLOR_RED, -1);
                             }*/
                         } else if (currentImageProcessing.equals("ASSYMETRIC_CIRCLES")) {
-                            matColor = getAssymetricCircleCenters(bitmap);
-//                            Mat centerMatrix = getAssymetricCircleCenters(bitmap);
-//                            for (int i = 0; i < centerMatrix.rows(); i++) {
-//                                for (int j = 0; j < centerMatrix.cols(); j++) {
-//                                    if (!(centerMatrix.get(i, j)[0] == 0 && centerMatrix.get(i, j)[1] == 0)) {
-//                                        drawMarker(matColor, new Point(centerMatrix.get(i, j)), COLOR_RED, 1, 2, 2, 1);
-//                                        putText(matColor, "(" + i + ", " + j + ")", new Point(centerMatrix.get(i, j)), FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
-//                                    }
-//                                }
-//                            }
+//                            matColor = getAssymetricCircleCenters(bitmap);
+                            List<Point> imagePoints = getAssymetricCircleCenters(bitmap).toList();
+                            for (Point point : imagePoints) {
+                                drawMarker(matColor, point, COLOR_RED, 1, 2, 2, 1);
+                                putText(matColor, String.valueOf(imagePoints.indexOf(point)), point, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+                            }
+//        }
                         }
 //---------------------------------------------------------------------------
 
@@ -497,8 +494,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             for (int i = 0; i < fileDir.listFiles().length; i++) {
                 photosObjectPoints.add(objectPoints);
-                photoImagePoints = getAssymetricCircleCenters(BitmapFactory.decodeFile(fileDir.listFiles()[i].getPath()));
-                photoImagePoints2f = new MatOfPoint2f(photoImagePoints);
+                photoImagePoints2f = getAssymetricCircleCenters(BitmapFactory.decodeFile(fileDir.listFiles()[i].getPath()));
 
                 photosImagePoints.add(photoImagePoints2f);
 
@@ -613,7 +609,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private Mat getAssymetricCircleCenters(Bitmap bitmap) {
+    private MatOfPoint2f getAssymetricCircleCenters(Bitmap bitmap) {
         Mat matColor = new Mat();
         Mat matGrey = new Mat();
 
@@ -823,12 +819,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //            }
 //        }
 
+        List<Point> finalPoints = new ArrayList<>();
+
         for (KeyPoint keyPoint : orderedPoints) {
-            drawMarker(matColor, keyPoint.pt, COLOR_RED, 1, 2, 2, 1);
-            putText(matColor, String.valueOf(orderedPoints.indexOf(keyPoint)), keyPoint.pt, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+//            drawMarker(matColor, keyPoint.pt, COLOR_RED, 1, 2, 2, 1);
+//            putText(matColor, String.valueOf(orderedPoints.indexOf(keyPoint)), keyPoint.pt, FONT_HERSHEY_SIMPLEX, 1, COLOR_RED);
+            finalPoints.add(keyPoint.pt);
         }
 
-        return matColor;
+        MatOfPoint2f finalMat = new MatOfPoint2f();
+        finalMat.fromList(finalPoints);
+
+        return finalMat;
     }
 
     private MatOfPoint2f getChessboardCorners(Bitmap bitmap) {
@@ -1329,11 +1331,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             averageCenter = biggestEllipse.center;
 
             List<Point> mostOuterEllipsePoints = new ArrayList<>();
-            for (int i = 0; i < 8; i++) {
-                if (i == 0 || i == 4) {
+            for (int i = 0; i < 10; i++) {
+                if (i == 0 || i == 5) {
                     continue;
                 }
-                Point ringPoint = biggestEllipseContour.toArray()[i * (biggestEllipseContour.toArray().length / 8)];
+                Point ringPoint = biggestEllipseContour.toArray()[i * (biggestEllipseContour.toArray().length / 10)];
 //                circle(matColor, ringPoint, 5, COLOR_RED, -1);
                 mostOuterEllipsePoints.add(ringPoint);
             }
@@ -1390,30 +1392,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     if (isThisMergedContour) {
                         currentId = j * 4 + i * 6;
                     } else {
-                        currentId = j * 2 + i * 6;
+                        currentId = j * 2 + i * 8;
                     }
                     for (Point ringPoint : finalContours.get(i).toArray()) {
                         if (iterationsToSkip != 0) {
                             iterationsToSkip--;
                             continue;
                         }
-                        if (dx > 100 && abs(m * (ringPoint.x - averageCenter.x) - (ringPoint.y - averageCenter.y)) < 2) {
+                        if (dx > 50 && abs(m * (ringPoint.x - averageCenter.x) - (ringPoint.y - averageCenter.y)) < 2) {
                             iterationsToSkip = 30;
-                            if (!isThisMergedContour && currentRingPointsMap.size() > 0 &&
-                                    sqrt(pow(ringPoint.x - currentRingPointsMap.get(previouslyAddedId).x, 2) +
-                                    pow(ringPoint.y - currentRingPointsMap.get(previouslyAddedId).y, 2)) < 100) {
-                                Point prevPoint = currentRingPointsMap.get(previouslyAddedId);
-                                currentRingPointsMap.remove(previouslyAddedId);
-                                if (sqrt(pow(ringPoint.x - mostOuterEllipsePoints.get(j).x, 2) +
-                                        pow(ringPoint.y - mostOuterEllipsePoints.get(j).y, 2)) > 200) {
-                                    currentId += j * 2 + 2;
-                                    currentRingPointsMap.put(previouslyAddedId + j * 2 + 2, prevPoint);
-                                } else {
-                                    currentId += j * 2;
-                                    currentRingPointsMap.put(previouslyAddedId + j * 2, prevPoint);
-                                }
-                                isThisMergedContour = true;
-                            }
+//                            if (!isThisMergedContour && currentRingPointsMap.size() > 0 &&
+//                                    sqrt(pow(ringPoint.x - currentRingPointsMap.get(previouslyAddedId).x, 2) +
+//                                    pow(ringPoint.y - currentRingPointsMap.get(previouslyAddedId).y, 2)) < 100) {
+//                                Point prevPoint = currentRingPointsMap.get(previouslyAddedId);
+//                                currentRingPointsMap.remove(previouslyAddedId);
+//                                if (sqrt(pow(ringPoint.x - mostOuterEllipsePoints.get(j).x, 2) +
+//                                        pow(ringPoint.y - mostOuterEllipsePoints.get(j).y, 2)) > 200) {
+//                                    currentId += j * 2 + 2;
+//                                    currentRingPointsMap.put(previouslyAddedId + j * 2 + 2, prevPoint);
+//                                } else {
+//                                    currentId += j * 2;
+//                                    currentRingPointsMap.put(previouslyAddedId + j * 2, prevPoint);
+//                                }
+//                                Log.d("Debug", "merge??");
+//                                isThisMergedContour = true;
+//                            }
                             currentRingPointsMap.put(currentId, ringPoint);
                             previouslyAddedId = currentId;
                             currentId++;
@@ -1432,14 +1435,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     });
                     for (int k = 0; k < points.size(); k++) {
                         if (isThisMergedContour) {
-                            switch (k % 2) {
-                                case 0 :
-                                    imagePointsMap.put((Integer) currentRingPointsMap.keySet().toArray()[k] - j * 2 - k / 2, points.get(k));
-                                    break;
-                                case 1 :
-                                    imagePointsMap.put((Integer) currentRingPointsMap.keySet().toArray()[k] + 5 - j * 2 - k / 2, points.get(k));
-                                    break;
-                            }
+//                            switch (k % 2) {
+//                                case 0 :
+//                                    imagePointsMap.put((Integer) currentRingPointsMap.keySet().toArray()[k] - j * 2 - k / 2, points.get(k));
+//                                    break;
+//                                case 1 :
+//                                    imagePointsMap.put((Integer) currentRingPointsMap.keySet().toArray()[k] + 5 - j * 2 - k / 2, points.get(k));
+//                                    break;
+//                            }
                         } else {
                             imagePointsMap.put((Integer) currentRingPointsMap.keySet().toArray()[k], points.get(k));
                         }
@@ -1467,8 +1470,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 //            putText(matColor, "angle = " + angle, new Point(200,200), FONT_HERSHEY_SIMPLEX, 1, COLOR_GREEN);
 //
-            for (Integer i : unrotatedImagePointsMap.keySet()) {
-                putText(matColor, "" + i, unrotatedImagePointsMap.get(i), FONT_HERSHEY_SIMPLEX, 0.8, COLOR_RED, 1);
+            for (Integer i : imagePointsMap.keySet()) {
+                putText(matColor, "" + i, imagePointsMap.get(i), FONT_HERSHEY_SIMPLEX, 0.8, COLOR_RED, 1);
             }
         }
 
@@ -1804,7 +1807,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         }
                         try {
                             Exif exif = Exif.createFromFile(file);
-                            Log.d("Debug:", String.valueOf(exif.getRotation()));
 
                         } catch(IOException e) {
 
