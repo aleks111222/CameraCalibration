@@ -396,7 +396,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Mat matTest2 = new Mat();
 
         if(currentImageProcessing.equals("CCTAG")) {
-            Bitmap bitmapRef = BitmapFactory.decodeResource(getResources(), R.drawable.reference1);
+            Bitmap bitmapRef = BitmapFactory.decodeResource(getResources(), R.drawable.cctag__kopiaopk);
             Utils.bitmapToMat(bitmapRef, matTest);
             int j = 0;
 //            for(Point imagePoint : detectCcTags(bitmapRef).toArray()) {
@@ -1331,6 +1331,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             averageCenter = biggestEllipse.center;
 
             List<Point> mostOuterEllipsePoints = new ArrayList<>();
+            List<Point> mostOuterEllipsePoints2 = new ArrayList<>();
             for (int i = 0; i < 360; i+=36) {
                 double s = sin(i*CV_PI/180);
                 double c = cos(i*CV_PI/180);
@@ -1338,22 +1339,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Point P2 = new Point(averageCenter.x+s*150, averageCenter.y+c*150);
                 double dy = P2.y - averageCenter.y;
                 double dx = P2.x - averageCenter.x;
-                if (abs(dx) < 10) {
-                    continue;
-                }
                 double m = dy / dx;
                 for (Point ringPoint : biggestEllipseContour.toArray()) {
                     if (iterationsToSkip != 0) {
                         iterationsToSkip--;
                         continue;
                     }
-                    if (abs(dx) > 50 && abs(m * (ringPoint.x - averageCenter.x) - (ringPoint.y - averageCenter.y)) < 2) {
+                    if (dx > 50 && abs(m * (ringPoint.x - averageCenter.x) - (ringPoint.y - averageCenter.y)) < 2) {
                         iterationsToSkip = 30;
-                        putText(matColor, "" + i, ringPoint, FONT_HERSHEY_SIMPLEX, 0.8, COLOR_RED, 1);
-                        mostOuterEllipsePoints.add(ringPoint);
-                        break;
+//                        putText(matColor, "" + i, ringPoint, FONT_HERSHEY_SIMPLEX, 0.8, COLOR_RED, 1);
+                        mostOuterEllipsePoints2.add(ringPoint);
+//                        circle(matColor, ringPoint, 5, COLOR_RED, -1);
                     }
                 }
+            }
+            for (int i = 0; i < mostOuterEllipsePoints2.size(); i += 2) {
+                mostOuterEllipsePoints.add(mostOuterEllipsePoints2.get(i));
+            }
+            for (int i = 1; i < mostOuterEllipsePoints2.size(); i += 2) {
+                mostOuterEllipsePoints.add(mostOuterEllipsePoints2.get(i));
             }
 //            for (int i = 0; i < 10; i++) {
 //                if (i == 0 || i == 5) {
@@ -1483,7 +1487,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 angle -= 90;
             }
 
-            Mat ccTagRotationMatrix = getRotationMatrix2D(averageCenter, -angle, 1);
+//            Mat ccTagRotationMatrix = getRotationMatrix2D(averageCenter, -angle, 1);
 
             Map<Integer, Point> unrotatedImagePointsMap = new HashMap<>();
 
@@ -1500,7 +1504,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             for (Integer i : imagePointsMap.keySet()) {
                 imagePoints.add(imagePointsMap.get(i));
 
-//                putText(matColor, "" + i, imagePointsMap.get(i), FONT_HERSHEY_SIMPLEX, 0.8, COLOR_RED, 1);
+                putText(matColor, "" + i, imagePointsMap.get(i), FONT_HERSHEY_SIMPLEX, 0.8, COLOR_RED, 1);
             }
         }
 
