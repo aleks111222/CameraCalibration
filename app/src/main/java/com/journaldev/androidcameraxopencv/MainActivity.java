@@ -396,7 +396,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Mat matTest2 = new Mat();
 
         if(currentImageProcessing.equals("CCTAG")) {
-            Bitmap bitmapRef = BitmapFactory.decodeResource(getResources(), R.drawable.cctag__kopiaopk);
+            Bitmap bitmapRef = BitmapFactory.decodeResource(getResources(), R.drawable.cctagref);
             Utils.bitmapToMat(bitmapRef, matTest);
             int j = 0;
 //            for(Point imagePoint : detectCcTags(bitmapRef).toArray()) {
@@ -404,6 +404,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                drawMarker(matTest, imagePoint, COLOR_RED, 1, 2, 2, 1);
 //                putText(matTest, "" + detectCcTags(bitmapRef).toList().indexOf(imagePoint), imagePoint, FONT_HERSHEY_SIMPLEX, 0.8, COLOR_RED, 1);
 //                j++;
+//                if (pointsList.size() == 48) {
+//                    break;
+//                }
 //            }
             objectPoints.fromList(pointsList);
 
@@ -460,9 +463,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     FONT_HERSHEY_SIMPLEX, 1, COLOR_BLUE, 3);
 
             Utils.matToBitmap(matUndistorted, bitmap);
-            File file = new File(getFilesDir(), "Calibrated.jpg");
+            File file2 = new File(getFilesDir(), "Calibrated.jpg");
             try {
-                FileOutputStream out = new FileOutputStream(file);
+                FileOutputStream out = new FileOutputStream(file2);
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
                 out.flush();
                 out.close();
@@ -1316,19 +1319,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Map<Integer, Point> imagePointsMap = new HashMap<>();
         List<Point> imagePoints = new ArrayList<>();
         if (ellipsesWithCommonCentersBest.size() > 1) {
-            Point averageCenter = new Point();
+            Point averageCenter = new Point(0,0);
 
             MatOfPoint biggestEllipseContour = contoursInBestEllipseOrder.get(0);
             RotatedRect biggestEllipse = ellipsesWithCommonCentersBest.get(0);
 
+            Moments moments;
+            Point center = new Point(0,0);
+
             for (int i = 0; i < ellipsesWithCommonCentersBest.size(); i++) {
+                moments = moments(contoursInBestEllipseOrder.get(i));
+                center.x = moments.m10 / moments.m00;
+                center.y = moments.m01 / moments.m00;
+                averageCenter.x += center.x;
+                averageCenter.y += center.y;
                 if (ellipsesWithCommonCentersBest.get(i).size.height > biggestEllipse.size.height
                         && ellipsesWithCommonCentersBest.get(i).size.width > biggestEllipse.size.width) {
                     biggestEllipse = ellipsesWithCommonCentersBest.get(i);
                     biggestEllipseContour = contoursInBestEllipseOrder.get(i);
                 }
             }
-            averageCenter = biggestEllipse.center;
+            averageCenter.x /= ellipsesWithCommonCentersBest.size();
+            averageCenter.y /= ellipsesWithCommonCentersBest.size();
+
+            circle(matColor, averageCenter, 5, COLOR_RED, -1);
 
             List<Point> mostOuterEllipsePoints = new ArrayList<>();
             List<Point> mostOuterEllipsePoints2 = new ArrayList<>();
