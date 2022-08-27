@@ -143,7 +143,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     org.opencv.core.Size circleGridSize = new org.opencv.core.Size(6,8);
     boolean CAN_TAKE_PHOTO = false;
 
-    String currentImageProcessing = "CCTAG";
+    String currentImageProcessing = "CHESSBOARD";
 
     ImageCapture imageCapture;
     ImageAnalysis imageAnalysis;
@@ -343,12 +343,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                                drawMarker(matColor, new Point(corners.get((int) (chessboardSize.width * chessboardSize.height) - 1, 0)), COLOR_YELLOW, 1, 10, 5, 1);
 //                            }
                         } else if (currentImageProcessing.equals("CCTAG")) {
-                            matColor = detectCcTags(bitmap);
-//                            List<Point> imagePoints = detectCcTags(bitmap).toList();
-//                            for (Point point : imagePoints) {
-//                                drawMarker(matColor, point, COLOR_RED, 1, 2, 2, 1);
-//                                putText(matColor, "" + imagePoints.indexOf(point), point, FONT_HERSHEY_SIMPLEX, 0.8, COLOR_RED, 1);
-//                            }
+//                            matColor = detectCcTags(bitmap);
+                            List<Point> imagePoints = detectCcTags(bitmap).toList();
+                            for (Point point : imagePoints) {
+                                drawMarker(matColor, point, COLOR_RED, 1, 2, 2, 1);
+                                putText(matColor, "" + imagePoints.indexOf(point), point, FONT_HERSHEY_SIMPLEX, 0.8, COLOR_RED, 1);
+                            }
 
                         } else if (currentImageProcessing.equals("ASSYMETRIC_CIRCLES")) {
                             matColor = getAssymetricCircleCenters(bitmap);
@@ -399,15 +399,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Bitmap bitmapRef = BitmapFactory.decodeResource(getResources(), R.drawable.cctagref);
             Utils.bitmapToMat(bitmapRef, matTest);
             int j = 0;
-//            for(Point imagePoint : detectCcTags(bitmapRef).toArray()) {
-//                pointsList.add(new Point3(imagePoint.x, imagePoint.y, 0));
-//                drawMarker(matTest, imagePoint, COLOR_RED, 1, 2, 2, 1);
-//                putText(matTest, "" + detectCcTags(bitmapRef).toList().indexOf(imagePoint), imagePoint, FONT_HERSHEY_SIMPLEX, 0.8, COLOR_RED, 1);
-//                j++;
-//                if (pointsList.size() == 48) {
-//                    break;
-//                }
-//            }
+            for(Point imagePoint : detectCcTags(bitmapRef).toArray()) {
+                pointsList.add(new Point3(imagePoint.x, imagePoint.y, 0));
+                drawMarker(matTest, imagePoint, COLOR_RED, 1, 2, 2, 1);
+                putText(matTest, "" + detectCcTags(bitmapRef).toList().indexOf(imagePoint), imagePoint, FONT_HERSHEY_SIMPLEX, 0.8, COLOR_RED, 1);
+                j++;
+                if (pointsList.size() == 48) {
+                    break;
+                }
+            }
             objectPoints.fromList(pointsList);
 
             j = 0;
@@ -419,7 +419,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             for (int i = 0; i < fileDir.listFiles().length; i++) {
                 photosObjectPoints.add(objectPoints);
-//                photoImagePoints2f.fromList(detectCcTags(BitmapFactory.decodeFile(fileDir.listFiles()[i].getPath())).toList());
+                photoImagePoints2f.fromList(detectCcTags(BitmapFactory.decodeFile(fileDir.listFiles()[i].getPath())).toList());
 //                Utils.bitmapToMat(BitmapFactory.decodeFile(fileDir.listFiles()[i].getPath()), matTest2);
 
 //                for(Point imagePoint : detectCcTags(BitmapFactory.decodeFile(fileDir.listFiles()[i].getPath())).toList()) {
@@ -441,7 +441,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             calibrateCamera(photosObjectPoints, photosImagePoints, IMAGE_SIZE, cameraMatrix, distCoeffs, rvecs, tvecs);
 
-            Bitmap bitmap = BitmapFactory.decodeFile(fileDir.listFiles()[0].getPath());
+            Bitmap bitmap = BitmapFactory.decodeFile(fileDir.listFiles()[3].getPath());
             Mat matDistorted = new Mat();
             Mat matUndistorted = new Mat();
             Utils.bitmapToMat(bitmap, matDistorted);
@@ -547,17 +547,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     pointsList.add(row);
                 }
             }
-
+            pointsList.remove(47);
+//            pointsList.remove(46);
             objectPoints.fromList(pointsList);
 
             File fileDir = getFilesDir();
             List<Mat> photosObjectPoints = new ArrayList<>();
             List<Mat> photosImagePoints = new ArrayList<>();
             MatOfPoint2f photoImagePoints2f = new MatOfPoint2f();
+            List<Point> imagePoints2f;
 
             for (int i = 0; i < fileDir.listFiles().length; i++) {
                 photosObjectPoints.add(objectPoints);
-                photoImagePoints2f = getChessboardCorners(BitmapFactory.decodeFile(fileDir.listFiles()[i].getPath()));
+                imagePoints2f = new ArrayList<>(getChessboardCorners(BitmapFactory.decodeFile(fileDir.listFiles()[i].getPath())).toList());
+                imagePoints2f.remove(47);
+//                imagePoints2f.remove(46);
+                photoImagePoints2f.fromList(imagePoints2f);
             /*for(int y=0; y<54; y++) {
                     Mat row = new Mat(1, 3, CV_32F);
                     row.col(0).setTo(new Scalar(photoImagePoints2f.toList().get(y).x));
@@ -575,7 +580,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             calibrateCamera(photosObjectPoints, photosImagePoints, IMAGE_SIZE, cameraMatrix, distCoeffs, rvecs, tvecs);
 
-            Bitmap bitmap = BitmapFactory.decodeFile(fileDir.listFiles()[24].getPath());
+            Bitmap bitmap = BitmapFactory.decodeFile(fileDir.listFiles()[25].getPath());
             Mat matDistorted = new Mat();
             Mat matUndistorted = new Mat();
             Utils.bitmapToMat(bitmap, matDistorted);
@@ -1224,7 +1229,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return finalMat;
     }
 
-    private Mat detectCcTags(Bitmap bitmap) {
+    private MatOfPoint2f detectCcTags(Bitmap bitmap) {
 
         Mat matColor = new Mat();
         Mat matGrey = new Mat();
@@ -1687,7 +1692,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         MatOfPoint2f finalMat = new MatOfPoint2f();
         finalMat.fromList(imagePoints);
 
-        return matColor;
+        return finalMat;
     }
 
     private void showAcceptedRejectedButton(boolean acceptedRejected) {
