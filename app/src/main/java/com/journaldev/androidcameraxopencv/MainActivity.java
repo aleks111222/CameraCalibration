@@ -143,7 +143,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     org.opencv.core.Size circleGridSize = new org.opencv.core.Size(6,8);
     boolean CAN_TAKE_PHOTO = false;
 
-    String currentImageProcessing = "ASSYMETRIC_CIRCLES";
+    String currentImageProcessing = "CHESSBOARD";
 
     ImageCapture imageCapture;
     ImageAnalysis imageAnalysis;
@@ -407,7 +407,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     break;
                 }
             }
+
+            pointsList.remove(47);
+            pointsList.remove(46);
+            pointsList.remove(45);
+            pointsList.remove(44);
+            pointsList.remove(43);
+            pointsList.remove(42);
+            pointsList.remove(41);
+            pointsList.remove(40);
+//
+            pointsList.remove(39);
+//
+            pointsList.remove(38);
+            pointsList.remove(37);
+            pointsList.remove(36);
+            pointsList.remove(35);
+            pointsList.remove(34);
+            pointsList.remove(33);
+//
+            pointsList.remove(32);
+
             objectPoints.fromList(pointsList);
+
+
 
             j = 0;
 
@@ -415,10 +438,33 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             List<Mat> photosObjectPoints = new ArrayList<>();
             List<Mat> photosImagePoints = new ArrayList<>();
             MatOfPoint2f photoImagePoints2f = new MatOfPoint2f();
+            List<Point> imagePointsList2f;
 
             for (int i = 0; i < fileDir.listFiles().length; i++) {
                 photosObjectPoints.add(objectPoints);
-                photoImagePoints2f.fromList(detectCcTags(BitmapFactory.decodeFile(fileDir.listFiles()[i].getPath())).toList());
+                imagePointsList2f = new ArrayList<>(detectCcTags(BitmapFactory.decodeFile(fileDir.listFiles()[i].getPath())).toList());
+
+                imagePointsList2f.remove(47);
+                imagePointsList2f.remove(46);
+                imagePointsList2f.remove(45);
+                imagePointsList2f.remove(44);
+                imagePointsList2f.remove(43);
+                imagePointsList2f.remove(42);
+                imagePointsList2f.remove(41);
+                imagePointsList2f.remove(40);
+//
+                imagePointsList2f.remove(39);
+//
+                imagePointsList2f.remove(38);
+                imagePointsList2f.remove(37);
+                imagePointsList2f.remove(36);
+                imagePointsList2f.remove(35);
+                imagePointsList2f.remove(34);
+                imagePointsList2f.remove(33);
+//
+                imagePointsList2f.remove(32);
+
+                photoImagePoints2f.fromList(imagePointsList2f);
 //                Utils.bitmapToMat(BitmapFactory.decodeFile(fileDir.listFiles()[i].getPath()), matTest2);
 
 //                for(Point imagePoint : detectCcTags(BitmapFactory.decodeFile(fileDir.listFiles()[i].getPath())).toList()) {
@@ -440,7 +486,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             calibrateCamera(photosObjectPoints, photosImagePoints, IMAGE_SIZE, cameraMatrix, distCoeffs, rvecs, tvecs);
 
-            Bitmap bitmap = BitmapFactory.decodeFile(fileDir.listFiles()[3].getPath());
+            Bitmap bitmap = BitmapFactory.decodeFile(fileDir.listFiles()[4].getPath());
             Mat matDistorted = new Mat();
             Mat matUndistorted = new Mat();
             Utils.bitmapToMat(bitmap, matDistorted);
@@ -489,20 +535,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             pointsList.remove(45);
             pointsList.remove(44);
             pointsList.remove(43);
-//            pointsList.remove(42);
-//            pointsList.remove(41);
-//            pointsList.remove(40);
+            pointsList.remove(42);
+            pointsList.remove(41);
+            pointsList.remove(40);
 //
-//            pointsList.remove(39);
+            pointsList.remove(39);
 //
-//            pointsList.remove(38);
-//            pointsList.remove(37);
-//            pointsList.remove(36);
-//            pointsList.remove(35);
-//            pointsList.remove(34);
-//            pointsList.remove(33);
+            pointsList.remove(38);
+            pointsList.remove(37);
+            pointsList.remove(36);
+            pointsList.remove(35);
+            pointsList.remove(34);
+            pointsList.remove(33);
 //
-//            pointsList.remove(32);
+            pointsList.remove(32);
 
             objectPoints.fromList(pointsList);
 
@@ -522,20 +568,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 imagePointsList2f.remove(45);
                 imagePointsList2f.remove(44);
                 imagePointsList2f.remove(43);
-//                imagePointsList2f.remove(42);
-//                imagePointsList2f.remove(41);
-//                imagePointsList2f.remove(40);
+                imagePointsList2f.remove(42);
+                imagePointsList2f.remove(41);
+                imagePointsList2f.remove(40);
 //
-//                imagePointsList2f.remove(39);
+                imagePointsList2f.remove(39);
 //
-//                imagePointsList2f.remove(38);
-//                imagePointsList2f.remove(37);
-//                imagePointsList2f.remove(36);
-//                imagePointsList2f.remove(35);
-//                imagePointsList2f.remove(34);
-//                imagePointsList2f.remove(33);
+                imagePointsList2f.remove(38);
+                imagePointsList2f.remove(37);
+                imagePointsList2f.remove(36);
+                imagePointsList2f.remove(35);
+                imagePointsList2f.remove(34);
+                imagePointsList2f.remove(33);
 //
-//                imagePointsList2f.remove(32);
+                imagePointsList2f.remove(32);
 
                 photoImagePoints2f.fromList(imagePointsList2f);
                 photosImagePoints.add(photoImagePoints2f);
@@ -616,9 +662,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             MatOfPoint2f photoImagePoints2f = new MatOfPoint2f();
             List<Point> imagePoints2f;
 
+            Bitmap bitmapRef = BitmapFactory.decodeFile(fileDir.listFiles()[0].getPath());
+            Utils.bitmapToMat(bitmapRef, matTest);
+
             for (int i = 0; i < fileDir.listFiles().length; i++) {
                 photosObjectPoints.add(objectPoints);
                 imagePoints2f = new ArrayList<>(getChessboardCorners(BitmapFactory.decodeFile(fileDir.listFiles()[i].getPath())).toList());
+                for (Point point : imagePoints2f) {
+                    drawMarker(matTest, point, COLOR_RED, 1, 1, 2, 1);
+                }
 //                imagePoints2f.remove(47);
 //                imagePoints2f.remove(46);
 //                imagePoints2f.remove(45);
@@ -650,6 +702,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Log.d("Debug:", "" + photoImagePoints2f.size() + fileDir.listFiles()[i].getPath());
                 photosImagePoints.add(photoImagePoints2f);
             }
+            Utils.matToBitmap(matTest, bitmapRef);
+            File file2 = new File(getFilesDir(), "Calibrated2.jpg");
+            try {
+                FileOutputStream out = new FileOutputStream(file2);
+                bitmapRef.compress(Bitmap.CompressFormat.PNG, 100, out);
+                out.flush();
+                out.close();
+            } catch (Exception e) {
+            }
             Mat cameraMatrix = new Mat();
             MatOfDouble distCoeffs = new MatOfDouble();
             List<Mat> rvecs = new ArrayList<>();
@@ -657,7 +718,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             calibrateCamera(photosObjectPoints, photosImagePoints, IMAGE_SIZE, cameraMatrix, distCoeffs, rvecs, tvecs);
 
-            Bitmap bitmap = BitmapFactory.decodeFile(fileDir.listFiles()[25].getPath());
+            Bitmap bitmap = BitmapFactory.decodeFile(fileDir.listFiles()[0].getPath());
             Mat matDistorted = new Mat();
             Mat matUndistorted = new Mat();
             Utils.bitmapToMat(bitmap, matDistorted);
