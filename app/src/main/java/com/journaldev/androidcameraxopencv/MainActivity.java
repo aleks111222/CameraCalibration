@@ -143,7 +143,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     org.opencv.core.Size circleGridSize = new org.opencv.core.Size(6,8);
     boolean CAN_TAKE_PHOTO = false;
 
-    String currentImageProcessing = "CHESSBOARD";
+    String currentImageProcessing = "CCTAG";
 
     ImageCapture imageCapture;
     ImageAnalysis imageAnalysis;
@@ -395,44 +395,44 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Mat matTest2 = new Mat();
 
         if(currentImageProcessing.equals("CCTAG")) {
-            Bitmap bitmapRef = BitmapFactory.decodeResource(getResources(), R.drawable.cctagref);
-            Utils.bitmapToMat(bitmapRef, matTest);
-            int j = 0;
-            for(Point imagePoint : detectCcTags(bitmapRef).toArray()) {
-                pointsList.add(new Point3(imagePoint.x, imagePoint.y, 0));
-                drawMarker(matTest, imagePoint, COLOR_RED, 1, 2, 2, 1);
-                putText(matTest, "" + detectCcTags(bitmapRef).toList().indexOf(imagePoint), imagePoint, FONT_HERSHEY_SIMPLEX, 0.8, COLOR_RED, 1);
-                j++;
-                if (pointsList.size() == 48) {
-                    break;
-                }
-            }
+//            Bitmap bitmapRef = BitmapFactory.decodeResource(getResources(), R.drawable.cctagref);
+//            Utils.bitmapToMat(bitmapRef, matTest);
+//            int j = 0;
+//            for(Point imagePoint : detectCcTags(bitmapRef).toArray()) {
+//                pointsList.add(new Point3(imagePoint.x, imagePoint.y, 0));
+////                drawMarker(matTest, imagePoint, COLOR_RED, 1, 2, 2, 1);
+//                putText(matTest, "" + detectCcTags(bitmapRef).toList().indexOf(imagePoint), imagePoint, FONT_HERSHEY_SIMPLEX, 0.8, COLOR_RED, 1);
+//                j++;
+//                if (pointsList.size() == 48) {
+//                    break;
+//                }
+//            }
 
-            pointsList.remove(47);
-            pointsList.remove(46);
-            pointsList.remove(45);
-            pointsList.remove(44);
-            pointsList.remove(43);
-            pointsList.remove(42);
-            pointsList.remove(41);
-            pointsList.remove(40);
-//
-            pointsList.remove(39);
-//
-            pointsList.remove(38);
-            pointsList.remove(37);
-            pointsList.remove(36);
-            pointsList.remove(35);
-            pointsList.remove(34);
-            pointsList.remove(33);
-//
-            pointsList.remove(32);
+//            pointsList.remove(47);
+//            pointsList.remove(46);
+//            pointsList.remove(45);
+//            pointsList.remove(44);
+//            pointsList.remove(43);
+//            pointsList.remove(42);
+//            pointsList.remove(41);
+//            pointsList.remove(40);
+////
+//            pointsList.remove(39);
+////
+//            pointsList.remove(38);
+//            pointsList.remove(37);
+//            pointsList.remove(36);
+//            pointsList.remove(35);
+//            pointsList.remove(34);
+//            pointsList.remove(33);
+////
+//            pointsList.remove(32);
 
             objectPoints.fromList(pointsList);
 
 
 
-            j = 0;
+//            j = 0;
 
             File fileDir = getFilesDir();
             List<Mat> photosObjectPoints = new ArrayList<>();
@@ -440,29 +440,41 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             MatOfPoint2f photoImagePoints2f = new MatOfPoint2f();
             List<Point> imagePointsList2f;
 
+            Bitmap bitmapRef = BitmapFactory.decodeFile(fileDir.listFiles()[0].getPath());
+            Utils.bitmapToMat(bitmapRef, matTest);
+
             for (int i = 0; i < fileDir.listFiles().length; i++) {
                 photosObjectPoints.add(objectPoints);
                 imagePointsList2f = new ArrayList<>(detectCcTags(BitmapFactory.decodeFile(fileDir.listFiles()[i].getPath())).toList());
 
-                imagePointsList2f.remove(47);
-                imagePointsList2f.remove(46);
-                imagePointsList2f.remove(45);
-                imagePointsList2f.remove(44);
-                imagePointsList2f.remove(43);
-                imagePointsList2f.remove(42);
-                imagePointsList2f.remove(41);
-                imagePointsList2f.remove(40);
-//
-                imagePointsList2f.remove(39);
-//
-                imagePointsList2f.remove(38);
-                imagePointsList2f.remove(37);
-                imagePointsList2f.remove(36);
-                imagePointsList2f.remove(35);
-                imagePointsList2f.remove(34);
-                imagePointsList2f.remove(33);
-//
-                imagePointsList2f.remove(32);
+                drawMarker(matTest, imagePointsList2f.get(0), COLOR_RED, 1, 2, 3, 1);
+                drawMarker(matTest, imagePointsList2f.get(1), COLOR_RED, 1, 2, 3, 1);
+                drawMarker(matTest, imagePointsList2f.get(2), COLOR_RED, 1, 2, 3, 1);
+                drawMarker(matTest, imagePointsList2f.get(3), COLOR_RED, 1, 2, 3, 1);
+                drawMarker(matTest, imagePointsList2f.get(4), COLOR_RED, 1, 2, 3, 1);
+                drawMarker(matTest, imagePointsList2f.get(5), COLOR_RED, 1, 2, 3, 1);
+                drawMarker(matTest, imagePointsList2f.get(6), COLOR_RED, 1, 2, 3, 1);
+                drawMarker(matTest, imagePointsList2f.get(7), COLOR_RED, 1, 2, 3, 1);
+
+//                imagePointsList2f.remove(47);
+//                imagePointsList2f.remove(46);
+//                imagePointsList2f.remove(45);
+//                imagePointsList2f.remove(44);
+//                imagePointsList2f.remove(43);
+//                imagePointsList2f.remove(42);
+//                imagePointsList2f.remove(41);
+//                imagePointsList2f.remove(40);
+////
+//                imagePointsList2f.remove(39);
+////
+//                imagePointsList2f.remove(38);
+//                imagePointsList2f.remove(37);
+//                imagePointsList2f.remove(36);
+//                imagePointsList2f.remove(35);
+//                imagePointsList2f.remove(34);
+//                imagePointsList2f.remove(33);
+////
+//                imagePointsList2f.remove(32);
 
                 photoImagePoints2f.fromList(imagePointsList2f);
 //                Utils.bitmapToMat(BitmapFactory.decodeFile(fileDir.listFiles()[i].getPath()), matTest2);
@@ -477,6 +489,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 Log.d("Debug:", "" + photoImagePoints2f.size() + fileDir.listFiles()[i].getPath());
                 photosImagePoints.add(photoImagePoints2f);
+            }
+
+            Utils.matToBitmap(matTest, bitmapRef);
+            File file2 = new File(getFilesDir(), "Calibrated2.jpg");
+            try {
+                FileOutputStream out = new FileOutputStream(file2);
+                bitmapRef.compress(Bitmap.CompressFormat.PNG, 100, out);
+                out.flush();
+                out.close();
+            } catch (Exception e) {
             }
 
             Mat cameraMatrix = new Mat();
@@ -508,9 +530,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     FONT_HERSHEY_SIMPLEX, 1, COLOR_BLUE, 3);
 
             Utils.matToBitmap(matUndistorted, bitmap);
-            File file2 = new File(getFilesDir(), "Calibrated.jpg");
+            File file3 = new File(getFilesDir(), "Calibrated.jpg");
             try {
-                FileOutputStream out = new FileOutputStream(file2);
+                FileOutputStream out = new FileOutputStream(file3);
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
                 out.flush();
                 out.close();
@@ -530,25 +552,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             }
 
-            pointsList.remove(47);
-            pointsList.remove(46);
-            pointsList.remove(45);
-            pointsList.remove(44);
-            pointsList.remove(43);
-            pointsList.remove(42);
-            pointsList.remove(41);
-            pointsList.remove(40);
-//
-            pointsList.remove(39);
-//
-            pointsList.remove(38);
-            pointsList.remove(37);
-            pointsList.remove(36);
-            pointsList.remove(35);
-            pointsList.remove(34);
-            pointsList.remove(33);
-//
-            pointsList.remove(32);
+//            pointsList.remove(47);
+//            pointsList.remove(46);
+//            pointsList.remove(45);
+//            pointsList.remove(44);
+//            pointsList.remove(43);
+//            pointsList.remove(42);
+//            pointsList.remove(41);
+//            pointsList.remove(40);
+////
+//            pointsList.remove(39);
+////
+//            pointsList.remove(38);
+//            pointsList.remove(37);
+//            pointsList.remove(36);
+//            pointsList.remove(35);
+//            pointsList.remove(34);
+//            pointsList.remove(33);
+////
+//            pointsList.remove(32);
 
             objectPoints.fromList(pointsList);
 
@@ -557,37 +579,94 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             List<Mat> photosImagePoints = new ArrayList<>();
             Mat photoImagePoints;
             MatOfPoint2f photoImagePoints2f = new MatOfPoint2f();
+            MatOfPoint2f photoImagePoints2f2 = new MatOfPoint2f();
             List<Point> imagePointsList2f = new ArrayList<>();
+
+            Bitmap newBitmap = BitmapFactory.decodeFile(fileDir.listFiles()[0].getPath());
+            Utils.bitmapToMat(newBitmap, matTest2);
+            cvtColor(matTest2, matTest2, COLOR_BGR2GRAY);
+
+            Bitmap bitmapRef = BitmapFactory.decodeFile(fileDir.listFiles()[0].getPath());
+            Utils.bitmapToMat(bitmapRef, matTest);
 
             for (int i = 0; i < fileDir.listFiles().length; i++) {
                 photosObjectPoints.add(objectPoints);
                 imagePointsList2f = new ArrayList<>(getAssymetricCircleCenters(BitmapFactory.decodeFile(fileDir.listFiles()[i].getPath())).toList());
+//                for (Point point : imagePointsList2f) {
+//                    drawMarker(matTest, point, COLOR_RED, 1, 1, 2, 1);
+//                }
 
-                imagePointsList2f.remove(47);
-                imagePointsList2f.remove(46);
-                imagePointsList2f.remove(45);
-                imagePointsList2f.remove(44);
-                imagePointsList2f.remove(43);
-                imagePointsList2f.remove(42);
-                imagePointsList2f.remove(41);
-                imagePointsList2f.remove(40);
-//
-                imagePointsList2f.remove(39);
-//
-                imagePointsList2f.remove(38);
-                imagePointsList2f.remove(37);
-                imagePointsList2f.remove(36);
-                imagePointsList2f.remove(35);
-                imagePointsList2f.remove(34);
-                imagePointsList2f.remove(33);
-//
-                imagePointsList2f.remove(32);
+                drawMarker(matTest, imagePointsList2f.get(0), COLOR_RED, 1, 2, 3, 1);
+                drawMarker(matTest, imagePointsList2f.get(1), COLOR_RED, 1, 2, 3, 1);
+                drawMarker(matTest, imagePointsList2f.get(2), COLOR_RED, 1, 2, 3, 1);
+                drawMarker(matTest, imagePointsList2f.get(3), COLOR_RED, 1, 2, 3, 1);
+
+                drawMarker(matTest, imagePointsList2f.get(6), COLOR_RED, 1, 2, 3, 1);
+                drawMarker(matTest, imagePointsList2f.get(7), COLOR_RED, 1, 2, 3, 1);
+                drawMarker(matTest, imagePointsList2f.get(8), COLOR_RED, 1, 2, 3, 1);
+                drawMarker(matTest, imagePointsList2f.get(9), COLOR_RED, 1, 2, 3, 1);
+
+                drawMarker(matTest, imagePointsList2f.get(12), COLOR_RED, 1, 2, 3, 1);
+                drawMarker(matTest, imagePointsList2f.get(13), COLOR_RED, 1, 2, 3, 1);
+                drawMarker(matTest, imagePointsList2f.get(14), COLOR_RED, 1, 2, 3, 1);
+                drawMarker(matTest, imagePointsList2f.get(15), COLOR_RED, 1, 2, 3, 1);
+
+                drawMarker(matTest, imagePointsList2f.get(18), COLOR_RED, 1, 2, 3, 1);
+                drawMarker(matTest, imagePointsList2f.get(19), COLOR_RED, 1, 2, 3, 1);
+                drawMarker(matTest, imagePointsList2f.get(20), COLOR_RED, 1, 2, 3, 1);
+                drawMarker(matTest, imagePointsList2f.get(21), COLOR_RED, 1, 2, 3, 1);
+
+                drawMarker(matTest, imagePointsList2f.get(24), COLOR_RED, 1, 2, 3, 1);
+                drawMarker(matTest, imagePointsList2f.get(25), COLOR_RED, 1, 2, 3, 1);
+                drawMarker(matTest, imagePointsList2f.get(26), COLOR_RED, 1, 2, 3, 1);
+                drawMarker(matTest, imagePointsList2f.get(27), COLOR_RED, 1, 2, 3, 1);
+
+                drawMarker(matTest, imagePointsList2f.get(30), COLOR_RED, 1, 2, 3, 1);
+                drawMarker(matTest, imagePointsList2f.get(31), COLOR_RED, 1, 2, 3, 1);
+                drawMarker(matTest, imagePointsList2f.get(32), COLOR_RED, 1, 2, 3, 1);
+                drawMarker(matTest, imagePointsList2f.get(33), COLOR_RED, 1, 2, 3, 1);
+
+//                findCirclesGrid(matTest2, new org.opencv.core.Size(4, 12), photoImagePoints2f2, CALIB_CB_ASYMMETRIC_GRID);
+//                for (Point point : photoImagePoints2f2.toArray()) {
+//                    drawMarker(matTest, point, COLOR_GREEN, 1, 1, 1, 1);
+//                }
+
+//                imagePointsList2f.remove(47);
+//                imagePointsList2f.remove(46);
+//                imagePointsList2f.remove(45);
+//                imagePointsList2f.remove(44);
+//                imagePointsList2f.remove(43);
+//                imagePointsList2f.remove(42);
+//                imagePointsList2f.remove(41);
+//                imagePointsList2f.remove(40);
+////
+//                imagePointsList2f.remove(39);
+////
+//                imagePointsList2f.remove(38);
+//                imagePointsList2f.remove(37);
+//                imagePointsList2f.remove(36);
+//                imagePointsList2f.remove(35);
+//                imagePointsList2f.remove(34);
+//                imagePointsList2f.remove(33);
+////
+//                imagePointsList2f.remove(32);
 
                 photoImagePoints2f.fromList(imagePointsList2f);
                 photosImagePoints.add(photoImagePoints2f);
 
                 Log.d("Debug:", "" + photoImagePoints2f.size() + fileDir.listFiles()[i].getPath());
             }
+
+            Utils.matToBitmap(matTest, bitmapRef);
+            File file2 = new File(getFilesDir(), "Calibrated2.jpg");
+            try {
+                FileOutputStream out = new FileOutputStream(file2);
+                bitmapRef.compress(Bitmap.CompressFormat.PNG, 100, out);
+                out.flush();
+                out.close();
+            } catch (Exception e) {
+            }
+
             Mat cameraMatrix = new Mat();
             MatOfDouble distCoeffs = new MatOfDouble();
             List<Mat> rvecs = new ArrayList<>();
@@ -654,23 +733,90 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //
 //            pointsList.remove(32);
 
-            objectPoints.fromList(pointsList);
+            List<Point3> localCalibObject = new ArrayList<>();
+
+            localCalibObject.add(pointsList.get(0));
+            localCalibObject.add(pointsList.get(1));
+            localCalibObject.add(pointsList.get(2));
+            localCalibObject.add(pointsList.get(3));
+            localCalibObject.add(pointsList.get(4));
+
+            localCalibObject.add(pointsList.get(8));
+            localCalibObject.add(pointsList.get(9));
+            localCalibObject.add(pointsList.get(10));
+            localCalibObject.add(pointsList.get(11));
+            localCalibObject.add(pointsList.get(12));
+
+            localCalibObject.add(pointsList.get(16));
+            localCalibObject.add(pointsList.get(17));
+            localCalibObject.add(pointsList.get(18));
+            localCalibObject.add(pointsList.get(19));
+            localCalibObject.add(pointsList.get(20));
+
+            localCalibObject.add(pointsList.get(24));
+            localCalibObject.add(pointsList.get(25));
+            localCalibObject.add(pointsList.get(26));
+            localCalibObject.add(pointsList.get(27));
+            localCalibObject.add(pointsList.get(28));
+
+            objectPoints.fromList(localCalibObject);
 
             File fileDir = getFilesDir();
             List<Mat> photosObjectPoints = new ArrayList<>();
             List<Mat> photosImagePoints = new ArrayList<>();
             MatOfPoint2f photoImagePoints2f = new MatOfPoint2f();
             List<Point> imagePoints2f;
+            Bitmap newBitmap = BitmapFactory.decodeFile(fileDir.listFiles()[0].getPath());
+            Utils.bitmapToMat(newBitmap, matTest2);
+            cvtColor(matTest2, matTest2, COLOR_BGR2GRAY);
 
             Bitmap bitmapRef = BitmapFactory.decodeFile(fileDir.listFiles()[0].getPath());
             Utils.bitmapToMat(bitmapRef, matTest);
 
+            List<Point> localPoints = new ArrayList<>();
+
             for (int i = 0; i < fileDir.listFiles().length; i++) {
-                photosObjectPoints.add(objectPoints);
+
+//                photosObjectPoints.add(objectPoints);
                 imagePoints2f = new ArrayList<>(getChessboardCorners(BitmapFactory.decodeFile(fileDir.listFiles()[i].getPath())).toList());
-                for (Point point : imagePoints2f) {
-                    drawMarker(matTest, point, COLOR_RED, 1, 1, 2, 1);
+
+                for (int j = 0; j < 3; j++) {
+                    for (int k = 0; k < 4; k++) {
+                        localPoints.clear();
+
+                        localPoints.add(imagePoints2f.get(j * 8 + k));
+                        localPoints.add(imagePoints2f.get(j * 8 + k + 1));
+                        localPoints.add(imagePoints2f.get(j * 8 + k + 2));
+                        localPoints.add(imagePoints2f.get(j * 8 + k + 3));
+                        localPoints.add(imagePoints2f.get(j * 8 + k + 4));
+
+                        localPoints.add(imagePoints2f.get(j * 8 + 8 + k));
+                        localPoints.add(imagePoints2f.get(j * 8 + 8 + k + 1));
+                        localPoints.add(imagePoints2f.get(j * 8 + 8 + k + 2));
+                        localPoints.add(imagePoints2f.get(j * 8 + 8 + k + 3));
+                        localPoints.add(imagePoints2f.get(j * 8 + 8 + k + 4));
+
+                        localPoints.add(imagePoints2f.get(j * 8 + 16 + k));
+                        localPoints.add(imagePoints2f.get(j * 8 + 16 + k + 1));
+                        localPoints.add(imagePoints2f.get(j * 8 + 16 + k + 2));
+                        localPoints.add(imagePoints2f.get(j * 8 + 16 + k + 3));
+                        localPoints.add(imagePoints2f.get(j * 8 + 16 + k + 4));
+
+                        localPoints.add(imagePoints2f.get(j * 8 + 24 + k));
+                        localPoints.add(imagePoints2f.get(j * 8 + 24 + k + 1));
+                        localPoints.add(imagePoints2f.get(j * 8 + 24 + k + 2));
+                        localPoints.add(imagePoints2f.get(j * 8 + 24 + k + 3));
+                        localPoints.add(imagePoints2f.get(j * 8 + 24 + k + 4));
+
+
+                        photosObjectPoints.add(objectPoints);
+                        photoImagePoints2f.fromList(localPoints);
+                        photosImagePoints.add(photoImagePoints2f);
+                    }
                 }
+//                for (Point point : imagePoints2f) {
+//                    drawMarker(matTest, point, COLOR_RED, 1, 1, 2, 1);
+//                }
 //                imagePoints2f.remove(47);
 //                imagePoints2f.remove(46);
 //                imagePoints2f.remove(45);
@@ -691,7 +837,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //
 //                imagePoints2f.remove(32);
 
-                photoImagePoints2f.fromList(imagePoints2f);
+//                photoImagePoints2f.fromList(imagePoints2f);
             /*for(int y=0; y<54; y++) {
                     Mat row = new Mat(1, 3, CV_32F);
                     row.col(0).setTo(new Scalar(photoImagePoints2f.toList().get(y).x));
@@ -699,8 +845,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     row.col(2).setTo(new Scalar(0));
                     photoImagePoints.push_back(row);
             }*/
-                Log.d("Debug:", "" + photoImagePoints2f.size() + fileDir.listFiles()[i].getPath());
-                photosImagePoints.add(photoImagePoints2f);
+                for (Point point : localPoints) {
+                    drawMarker(matTest, point, COLOR_RED, 1, 3, 4, 1);
+                }
+                Log.d("Debug:",  photosObjectPoints.size() + " " + photosImagePoints.size() + " " + fileDir.listFiles()[i].getPath());
+
             }
             Utils.matToBitmap(matTest, bitmapRef);
             File file2 = new File(getFilesDir(), "Calibrated2.jpg");
@@ -718,7 +867,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             calibrateCamera(photosObjectPoints, photosImagePoints, IMAGE_SIZE, cameraMatrix, distCoeffs, rvecs, tvecs);
 
-            Bitmap bitmap = BitmapFactory.decodeFile(fileDir.listFiles()[0].getPath());
+            Bitmap bitmap = BitmapFactory.decodeFile(fileDir.listFiles()[2].getPath());
             Mat matDistorted = new Mat();
             Mat matUndistorted = new Mat();
             Utils.bitmapToMat(bitmap, matDistorted);
@@ -1484,7 +1633,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             averageCenter.x /= ellipsesWithCommonCentersBest.size();
             averageCenter.y /= ellipsesWithCommonCentersBest.size();
 
-            circle(matColor, averageCenter, 5, COLOR_RED, -1);
+            drawMarker(matColor, averageCenter, COLOR_RED, 1, 1, 2, 1);
+
+//            circle(matColor, averageCenter, 5, COLOR_RED, -1);
 
             List<Point> mostOuterEllipsePoints = new ArrayList<>();
             List<Point> mostOuterEllipsePoints2 = new ArrayList<>();
@@ -1492,9 +1643,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 double s = sin(i*CV_PI/180);
                 double c = cos(i*CV_PI/180);
                 int iterationsToSkip = 0;
-                Point P2 = new Point(averageCenter.x+s*150, averageCenter.y+c*150);
+                Point P2 = new Point(averageCenter.x+s*1500, averageCenter.y+c*1500);
                 double dy = P2.y - averageCenter.y;
                 double dx = P2.x - averageCenter.x;
+                line(matColor, averageCenter, P2, COLOR_GREEN, 1);
                 double m = dy / dx;
                 for (Point ringPoint : biggestEllipseContour.toArray()) {
                     if (iterationsToSkip != 0) {
@@ -1659,8 +1811,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //
             for (Integer i : imagePointsMap.keySet()) {
                 imagePoints.add(imagePointsMap.get(i));
-
-                putText(matColor, "" + i, imagePointsMap.get(i), FONT_HERSHEY_SIMPLEX, 0.8, COLOR_RED, 1);
+                drawMarker(matColor, imagePointsMap.get(i), COLOR_RED, 1, 1, 2, 1);
+//                putText(matColor, "" + i, imagePointsMap.get(i), FONT_HERSHEY_SIMPLEX, 0.8, COLOR_RED, 1);
             }
         }
 
@@ -1829,6 +1981,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         MatOfPoint2f finalMat = new MatOfPoint2f();
         finalMat.fromList(imagePoints);
 
+//        Utils.matToBitmap(matColor, bitmap);
+//
+//        if(CAN_TAKE_PHOTO == true) {
+//            File file = new File(getFilesDir(), "Ref" + System.currentTimeMillis() + ".jpg");
+//            CAN_TAKE_PHOTO = false;
+//            try {
+//                FileOutputStream out = new FileOutputStream(file);
+//                bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+//                out.flush();
+//                out.close();
+//            } catch (Exception e) {
+//            }
+//        }
+
         return finalMat;
     }
 
@@ -1956,6 +2122,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
 
             case R.id.btnAccept:
+                CAN_TAKE_PHOTO = true;
                 File file = new File(
                         getFilesDir(), "" + System.currentTimeMillis() + "_JDCameraX.jpg");
 
@@ -1997,12 +2164,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         } catch (OutOfMemoryError oom) {
                             Log.w("TAG", "-- OOM Error in setting image");
                         }
-                        try {
-                            Exif exif = Exif.createFromFile(file);
-
-                        } catch(IOException e) {
-
-                        }
+//                        try {
+//                            Exif exif = Exif.createFromFile(file);
+//
+//                        } catch(IOException e) {
+//
+//                        }
                         Toast.makeText(getApplicationContext(), "Image saved successfully in Pictures Folder", Toast.LENGTH_LONG).show();
                     }
 
